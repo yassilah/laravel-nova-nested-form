@@ -69,7 +69,7 @@ class Relationship
      */
     protected function setName(string $name = null)
     {
-        $this->name = $name ?? Str::snakeCase($this->class::uriKey());
+        $this->name = $name ?? Str::snake($this->class::newModel()->getTable());
 
         return $this;
     }
