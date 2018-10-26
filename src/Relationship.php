@@ -6,6 +6,7 @@ namespace Yassi\NovaNestedForm;
 use Illuminate\Database\Eloquent\Model;
 use Exception;
 use ReflectionClass;
+use Illuminate\Support\Str;
 
 class Relationship
 {
@@ -68,7 +69,7 @@ class Relationship
      */
     protected function setName(string $name = null)
     {
-        $this->name = $name ?? $this->class::uriKey();
+        $this->name = $name ?? Str::snakeCase($this->class::uriKey());
 
         return $this;
     }
