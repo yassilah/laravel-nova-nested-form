@@ -50,16 +50,14 @@ export default {
             const newSchema = JSON.parse(JSON.stringify(field.schema))
 
             newSchema.fields.forEach(subfield => {
-                if (subfield.attribute) {
-                    subfield.attribute = subfield.attribute.replace('{{index}}', field.children.length)
-                }
-
-                if (subfield.heading) {
-                    subfield.heading = subfield.heading.replace('{{index}}', field.children.length + 1)
-                }
 
                 if (subfield.schema) {
                     subfield.schema = this.replaceIndexAttributeInSchema(subfield)
+                    //subfield.schema.heading = subfield.heading.replace('{{index}}', this.field.children.length + 1)
+                }
+
+                if (subfield.attribute) {
+                    subfield.attribute = subfield.attribute.replace('{{index}}', this.field.children.length)
                 }
             })
 

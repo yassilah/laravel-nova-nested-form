@@ -22,6 +22,13 @@ trait HasRelationships
     protected $relationship;
 
     /**
+     * Index.
+     * 
+     * @var int
+     */
+    protected $index;
+
+    /**
      * This method sets the relationship of the current resource.
      * 
      * @param Model $resource
@@ -72,7 +79,7 @@ trait HasRelationships
     protected function resolveHasManyRelationship()
     {
         return $this->withMeta([
-            'children' => $this->relationship->getInstance()->get()->map(function ($resource) {
+            'children' => $this->relationship->getInstance()->get()->map(function ($resource, $index) {
                 return (object)[
                     'fields' => $this->getRelatedUpdateFields($resource)->values(),
                     'resourceId' => $resource->id,
@@ -147,6 +154,7 @@ trait HasRelationships
             $field->attribute = $this->attribute . '[' . $index . '][' . $field->meta['original_attribute'] . ']';
 
             if ($field->component === $this->component) {
+                //$field->meta['heading'] = (is_int($index) ? $index + 1 : $index) . '.' . $field->meta['heading'];
                 $field->setChildrenAttribute()->setSchemaAttribute();
             }
         });
@@ -192,7 +200,7 @@ trait HasRelationships
      */
     protected function setSchemaAttribute()
     {
-        $this->setFieldsAttribute($this->meta['schema']->fields, '{{ index }}');
+        $this->setFieldsAttribute($this->meta['schema']->fields, '{{index}}');
 
         return $this;
     }
@@ -228,7 +236,20 @@ trait HasRelationships
      */
     protected function defaultHeading()
     {
-        return ($this->meta['has_many'] ? '{{index}}. ' : '') . $this->relationship->getClass()::singularLabel() . ' - ' . '{{' . $this->relationship->getClass()::$title . '}}';
+        return $this->relationship->getClass()::singularLabel() . ' - ' . '{{' . $this->relationship->getClass()::$title . '}}';
+        //return ($this->meta['has_many'] ? '{{index}}. ' : '') . $this->relationship->getClass()::singularLabel() . ' - ' . '{{' . $this->relationship->getClass()::$title . '}}';
+    }
+
+    /**
+     * This indicates the heading of the nested form.
+     * 
+     * @return NovaNestedForm
+     */
+    public function heading(string $template = null, string $separator = '.')
+    {
+        return $this->withMeta([
+            'heading' => $template
+        ]);
     }
 
     /**
@@ -250,9 +271,7 @@ trait HasRelationships
             ->setSchemaAttribute();
 
         if (!isset($this->meta['heading'])) {
-            $this->withMeta([
-                'heading' => $this->defaultHeading()
-            ]);
+            $this->heading($this->defaultHeading());
         }
     }
 }

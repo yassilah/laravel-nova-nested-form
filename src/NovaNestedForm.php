@@ -39,16 +39,5 @@ class NovaNestedForm extends Field
      */
     public $showOnDetail = false;
 
-    /**
-     * This indicates the heading of the nested form.
-     * 
-     * @return NovaNestedForm
-     */
-    public function heading(string $template = null)
-    {
-        return $this->withMeta([
-            'heading' => $template
-        ]);
-    }
 
 }
