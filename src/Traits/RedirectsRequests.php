@@ -12,6 +12,7 @@ use Laravel\Nova\Http\Requests\CreateResourceRequest;
 use Laravel\Nova\Http\Requests\DeleteResourceRequest;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
 use Laravel\Nova\Http\Controllers\ResourceStoreController;
+use Yassi\NovaNestedForm\Exceptions\NestedValidationException;
 
 trait RedirectsRequests
 {
@@ -50,7 +51,7 @@ trait RedirectsRequests
             }
             return $this->controller($data)->handle($this->request($request, $data));
         } catch (ValidationException $e) {
-            throw $this->throwValidationException($e, $data['prefix']);
+            throw new NestedValidationException($e, $data['prefix']);
         }
     }
 
@@ -148,25 +149,5 @@ trait RedirectsRequests
     protected function newRequestData(array $data, Model $model, string $attribute, int $retrieved_at)
     {
         return array_merge($this->data($data), $this->query($model, $attribute, $retrieved_at));
-    }
-
-    /**
-     * This method throws the validation exceptions 
-     * with the right attributes.
-     * 
-     * @return throwable
-     */
-    public function throwValidationException(ValidationException $e, string $prefix)
-    {
-        /**
-         * TODO: find better way to only prefix one time.
-         */
-        if (!isset($e->validator->errors()->messages()['prefixed'])) {
-            return $e->withMessages(collect($e->validator->errors()->messages())->mapWithKeys(function ($message, $attribute) use ($prefix) {
-                return [$prefix . '[' . $attribute . ']' => $message];
-            })->merge(['prefixed' => true])->toArray());
-        }
-
-        return $e;
     }
 }
