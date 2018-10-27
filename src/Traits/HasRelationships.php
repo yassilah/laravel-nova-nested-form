@@ -212,7 +212,7 @@ trait HasRelationships
      */
     protected function setAttribute()
     {
-        $this->attribute = $this->relationship->getName();
+        $this->attribute = 'nested:' . $this->relationship->getName();
 
         return $this;
     }

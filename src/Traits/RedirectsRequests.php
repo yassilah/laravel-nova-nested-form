@@ -112,7 +112,7 @@ trait RedirectsRequests
             'viaResource' => Nova::resourceForModel(get_class($model))::uriKey(),
             'viaRelationship' => $this->relationship->getName(),
             'viaResourceId' => $model->id,
-            'resource' => $attribute,
+            'resource' => str_replace('nested:', '', $attribute),
             '_retrieved_at' => $retrieved_at
         ];
     }
@@ -128,13 +128,18 @@ trait RedirectsRequests
      */
     protected function data(array $data)
     {
-        foreach ($data as &$value) {
+        $newData = [];
+
+        foreach ($data as $attribute => $value) {
+
             if (blank($value) || $value === 'null') {
                 $value = null;
             }
+
+            $newData[str_replace('nested:', '', $attribute)] = $value;
         }
 
-        return $data;
+        return $newData;
     }
 
     /**
