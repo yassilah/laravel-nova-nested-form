@@ -14,9 +14,6 @@ trait NestedFormTrait
      */
     public function availableFields(NovaRequest $request)
     {
-        /**
-         * TODO: find better way to check the current request.
-         */
         if (str_contains($request->field, 'nested:')) {
             $request->field = preg_replace('/.*?(?:\[.*?\])*\[(.*?)\]$/', '$1', $request->field);
         }
