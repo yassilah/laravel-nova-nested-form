@@ -76,7 +76,7 @@ export default {
         heading() {
             return this.field.heading.replace(/{{(.*?)}}/g, (val, key) => {
                 return key === 'index' ? this.index + 1 || '' : key === 'id' ? this.field.resourceId || '' :
-                    this.getFieldValue(this.field.fields.find(field => field.original_attribute === key))
+                    this.$parent.getFieldValue(this.field.fields.find(field => field.original_attribute === key))
             }).replace(/ - $/, '')
         }
     },
