@@ -1,8 +1,9 @@
 <?php
 
-namespace Yassi\NovaNestedForm\Traits;
+namespace Yassi\NestedForm\Traits;
 
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Yassi\NestedForm\NestedForm;
 
 trait NestedFormTrait
 {
@@ -14,7 +15,7 @@ trait NestedFormTrait
      */
     public function availableFields(NovaRequest $request)
     {
-        if (str_contains($request->field, 'nested:')) {
+        if (str_contains($request->field, NestedForm::ATTRIBUTE_PREFIX)) {
             $request->field = preg_replace('/.*?(?:\[.*?\])*\[(.*?)\]$/', '$1', $request->field);
         }
 

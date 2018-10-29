@@ -15,21 +15,19 @@
         <!-- HEADING -->
 
         <!-- ACTUAL FIELDS -->
-        <div :class="parentField.inline ? 'flex flex-wrap' : ''"
-             v-show="visible">
-            <component :class="parentField.inline && !subfield.component.includes('nested-field') ? 'flex-1' : ''"
-                       v-for="(subfield, index) in field.fields"
+        <div v-show="visible">
+            <component v-for="(subfield, index) in field.fields"
                        :key="index"
                        :field="subfield"
                        :errors="errors"
-                       :resourceName="parentField.relationship"
-                       :resourceId="parentField.resourceId"
+                       :resource-name="field.viaRelationship"
+                       :resource-id="field.viaResourceId"
                        :is="'form-' + subfield.component" />
         </div>
         <!-- ACTUAL FIELDS -->
 
         <!-- DELETION MODAL -->
-        <DeleteModal :resourceSingularName="parentField.relationship"
+        <DeleteModal :resourceSingularName="field.name"
                      :resource="field"
                      @submit="remove"
                      @close="showDeleteModal = false"
@@ -56,10 +54,6 @@ export default {
             type: Object,
             required: true
         },
-        parentField: {
-            type: Object,
-            required: true
-        },
         index: {
             type: Number | Boolean,
             default: false
@@ -76,7 +70,7 @@ export default {
 
     computed: {
         heading() {
-            return this.parentField.heading.replace(/{{(.*?)}}/g, (val, key) => {
+            return this.field.heading.replace(/{{(.*?)}}/g, (val, key) => {
                 return key === 'index' ? this.index + 1 || '' : key === 'id' ? this.field.resourceId || '' :
                     this.getFieldValue(this.field.fields.find(field => field.original_attribute === key))
             }).replace(/ - $/, '')
@@ -124,12 +118,11 @@ export default {
          * and keep track of the client-side id of the input field for validation errors.
          */
         appendToFormData(formData) {
-            const prefix = `${this.parentField.attribute}[${this.index}]`
-            formData.append(`${prefix}[prefix]`, prefix)
-            formData.append(`${prefix}[status]`, this.field.status)
+            formData.append(`${this.field.attribute}[prefix]`, this.field.attribute)
+            formData.append(`${this.field.attribute}[status]`, this.field.status)
 
             if (this.field.status !== 'created') {
-                formData.append(`${this.parentField.attribute}[${this.index}][id]`, this.field.resourceId)
+                formData.append(`${this.field.attribute}[id]`, this.field.resourceId)
             }
 
             if (this.field.status !== 'unchanged') {
@@ -158,7 +151,7 @@ export default {
          */
         remove() {
             if (this.field.status === 'created') {
-                this.parentField.children.splice(this.parentField.children.indexOf(this.field), 1)
+                this.field.children.splice(this.field.children.indexOf(this.field), 1)
             } else {
                 this.field.status = 'removed'
             }

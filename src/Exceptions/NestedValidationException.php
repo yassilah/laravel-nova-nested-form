@@ -1,6 +1,6 @@
 <?php
 
-namespace Yassi\NovaNestedForm\Exceptions;
+namespace Yassi\NestedForm\Exceptions;
 
 use Illuminate\Validation\ValidationException;
 use Exception;

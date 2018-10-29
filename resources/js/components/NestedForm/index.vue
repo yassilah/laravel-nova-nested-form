@@ -1,6 +1,5 @@
 <template>
-    <div class="nested-field-container"
-         :class="field.inline || field.component.includes('nested-form') ? 'flex-none w-full' : ''">
+    <div class="nested-field-container">
         <!-- NESTED FIELD -->
         <div :class="`nested-field-${field.type} ${index}`"
              v-for="(child, index) in children"
@@ -44,6 +43,14 @@ export default {
 
         fill(formData, parentNestedField = null) {
             this.field.children.forEach(child => child.fill(formData, parentNestedField))
+            if (!this.field.heading) {
+                const obj = {}
+                formData.forEach((v, k) => {
+                    obj[k] = v
+                })
+                console.log(obj)
+                throw new Error
+            }
         },
 
         replaceIndexAttributeInSchema(field = this.field) {
@@ -53,11 +60,11 @@ export default {
 
                 if (subfield.schema) {
                     subfield.schema = this.replaceIndexAttributeInSchema(subfield)
-                    //subfield.schema.heading = subfield.heading.replace('{{index}}', this.field.children.length + 1)
+                    //subfield.schema.heading = subfield.heading.replace(this.field.INDEX, this.field.children.length + 1)
                 }
 
                 if (subfield.attribute) {
-                    subfield.attribute = subfield.attribute.replace('{{index}}', this.field.children.length)
+                    subfield.attribute = subfield.attribute.replace(this.field.INDEX, this.field.children.length)
                 }
             })
 

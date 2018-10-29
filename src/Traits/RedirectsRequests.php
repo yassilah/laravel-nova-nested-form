@@ -1,18 +1,18 @@
 <?php
 
-namespace Yassi\NovaNestedForm\Traits;
+namespace Yassi\NestedForm\Traits;
 
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Nova\Nova;
-use Laravel\Nova\Http\Controllers\ResourceUpdateController;
-use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Illuminate\Validation\ValidationException;
-use Laravel\Nova\Http\Requests\CreateResourceRequest;
-use Laravel\Nova\Http\Requests\DeleteResourceRequest;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
 use Laravel\Nova\Http\Controllers\ResourceStoreController;
-use Yassi\NovaNestedForm\Exceptions\NestedValidationException;
+use Laravel\Nova\Http\Controllers\ResourceUpdateController;
+use Laravel\Nova\Http\Requests\CreateResourceRequest;
+use Laravel\Nova\Http\Requests\DeleteResourceRequest;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Http\Requests\UpdateResourceRequest;
+use Laravel\Nova\Nova;
+use Yassi\NestedForm\Exceptions\NestedValidationException;
 
 trait RedirectsRequests
 {
@@ -40,13 +40,13 @@ trait RedirectsRequests
 
     /**
      * This method runs the handle method of the selected controller.
-     * 
-     * @return 
+     *
+     * @return
      */
     protected function run(NovaRequest $request, array $data)
     {
         try {
-            if ($data['status'] === 'unchanged') {
+            if ($data['status'] === self::UNCHANGED) {
                 return $this->relationship->getClass()::fillForUpdate($request->replace($data), $this->relationship->getClass()::newModel()->forceFill($data));
             }
             return $this->controller($data)->handle($this->request($request, $data));
@@ -57,7 +57,7 @@ trait RedirectsRequests
 
     /**
      * This method retrurns the right request for the given data.
-     * 
+     *
      * @param NovaRequest $request
      * @param array $data
      * @return NovaRequest
@@ -65,31 +65,31 @@ trait RedirectsRequests
     protected function request(NovaRequest $request, array $data)
     {
         switch ($data['status']) {
-            case 'updated':
+            case self::UPDATED:
                 return UpdateResourceRequest::createFrom($request)->replace($data);
-            case 'created':
+            case self::CREATED:
                 return CreateResourceRequest::createFrom($request)->replace($data);
-            case 'removed':
+            case self::REMOVED:
                 return DeleteResourceRequest::createFrom($request)->replace(array_merge($data, ['resources' => [['id' => $data['id']]]]));
         }
     }
 
     /**
      * This method retrurns the right controller for the given data.
-     * 
+     *
      * @param array $data
      * @return Controller
      */
     protected function controller(array $data)
     {
         switch ($data['status']) {
-            case 'updated':
+            case self::UPDATED:
                 $controller = ResourceUpdateController::class;
                 break;
-            case 'created':
+            case self::CREATED:
                 $controller = ResourceStoreController::class;
                 break;
-            case 'removed':
+            case self::REMOVED:
                 $controller = ResourceDestroyController::class;
                 break;
         }
@@ -98,9 +98,9 @@ trait RedirectsRequests
     }
 
     /**
-     * This method returns the query parameters to send 
+     * This method returns the query parameters to send
      * in the fill attribute request.
-     * 
+     *
      * @param Model $model
      * @param string $attribute
      * @param int $retrieved_at
@@ -112,15 +112,15 @@ trait RedirectsRequests
             'viaResource' => Nova::resourceForModel(get_class($model))::uriKey(),
             'viaRelationship' => $this->relationship->getName(),
             'viaResourceId' => $model->id,
-            'resource' => str_replace('nested:', '', $attribute),
-            '_retrieved_at' => $retrieved_at
+            'resource' => str_replace(self::ATTRIBUTE_PREFIX, '', $attribute),
+            '_retrieved_at' => $retrieved_at,
         ];
     }
 
     /**
-     * This method returns the query parameters to send 
+     * This method returns the query parameters to send
      * in the fill attribute request.
-     * 
+     *
      * @param Model $model
      * @param string $attribute
      * @param int $retrieved_at
@@ -136,16 +136,16 @@ trait RedirectsRequests
                 $value = null;
             }
 
-            $newData[str_replace('nested:', '', $attribute)] = $value;
+            $newData[str_replace(self::ATTRIBUTE_PREFIX, '', $attribute)] = $value;
         }
 
         return $newData;
     }
 
     /**
-     * This method returns the query parameters to send 
+     * This method returns the query parameters to send
      * in the fill attribute request.
-     * 
+     *
      * @param Model $model
      * @param string $attribute
      * @param int $retrieved_at
