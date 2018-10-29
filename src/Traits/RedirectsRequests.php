@@ -119,7 +119,7 @@ trait RedirectsRequests
             'viaResource' => Nova::resourceForModel(get_class($model))::uriKey(),
             'viaRelationship' => $this->viaRelationship,
             'viaResourceId' => $model->id,
-            'resource' => $attribute,
+            'resource' => $this->relatedResource::uriKey(),
             'resourceId' => $data['id'] ?? null,
             '_retrieved_at' => $retrieved_at,
         ];
