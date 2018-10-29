@@ -27,9 +27,9 @@
         <!-- ACTUAL FIELDS -->
 
         <!-- DELETION MODAL -->
-        <DeleteModal :resourceSingularName="field.name"
+        <DeleteModal :resourceSingularName="$parent.field.name"
                      :resource="field"
-                     @submit="remove"
+                     @submit="$emit('remove', field)"
                      @close="showDeleteModal = false"
                      v-if="showDeleteModal" />
         <!-- DELETION MODAL -->
@@ -57,6 +57,10 @@ export default {
         index: {
             type: Number | Boolean,
             default: false
+        },
+        parent: {
+            type: Object,
+            required: true
         }
     },
 
@@ -86,76 +90,6 @@ export default {
         toggleVisibility() {
             this.visible = !this.visible
         },
-
-        /**
-         * This creates a temp FormData object
-         * to get the actual value of an attribute
-         * and therefore know whether it should be updated
-         */
-        getFieldValue(field) {
-            if (!field) return ''
-            else if (!field.fill) return field.value || ''
-
-            const temp = new FormData
-            field.fill(temp)
-            return temp.get(field.attribute) || null
-        },
-
-        /**
-         * This filters any subfields of a given field
-         * that should be updated
-         */
-        filterUpdatedSubFields(field = this.field) {
-            return field.fields.filter(field => !field.children && (field.component === 'belongs-to-field' ?
-                field.belongsToId != parseFloat(this.getFieldValue(field)) :
-                field.value != this.getFieldValue(field)))
-        },
-
-        /**
-         * This actually appends the current field to 
-         * the formData. It also adds the status and __preffix__
-         * to know what kind of request this field should send (update/create/remove)
-         * and keep track of the client-side id of the input field for validation errors.
-         */
-        appendToFormData(formData) {
-            formData.append(`${this.field.attribute}[prefix]`, this.field.attribute)
-            formData.append(`${this.field.attribute}[status]`, this.field.status)
-
-            if (this.field.status !== 'created') {
-                formData.append(`${this.field.attribute}[id]`, this.field.resourceId)
-            }
-
-            if (this.field.status !== 'unchanged') {
-                this.field.fields.filter(field => !field.children)
-                    .forEach(field => formData.append(field.attribute, this.getFieldValue(field)))
-            }
-        },
-
-        /**
-         * This overrides the default fill method of Nova to only target fields that
-         * actually need to be sent and trigger the fill methods of sub nested-field components.
-         */
-        fill(formData, parentNestedField = null) {
-            this.field.fields.filter(field => field.children).forEach((child, index) => child.fill(formData, this.field))
-
-            if (this.field.status === 'unchanged' && this.filterUpdatedSubFields().length > 0) {
-                this.field.status = 'updated'
-            }
-
-            this.appendToFormData(formData)
-            if (parentNestedField) parentNestedField.status = parentNestedField.status || 'unchanged'
-        },
-
-        /**
-         * This removes a resource from the data array
-         */
-        remove() {
-            if (this.field.status === 'created') {
-                this.field.children.splice(this.field.children.indexOf(this.field), 1)
-            } else {
-                this.field.status = 'removed'
-            }
-        }
     }
 }
 </script>

@@ -2,8 +2,8 @@
 
 namespace Yassi\NestedForm\Exceptions;
 
-use Illuminate\Validation\ValidationException;
 use Exception;
+use Illuminate\Validation\ValidationException;
 
 class NestedValidationException extends Exception
 {
@@ -30,7 +30,7 @@ class NestedValidationException extends Exception
 
     /**
      * Builds the exception content.
-     * 
+     *
      * @return array
      */
     public function render()
@@ -48,6 +48,7 @@ class NestedValidationException extends Exception
      */
     public function errors()
     {
+
         return collect($this->exception->validator->errors()->messages())->mapWithKeys(function ($message, $attribute) {
             return [$this->prefix . '[' . $attribute . ']' => $message];
         })->toArray();

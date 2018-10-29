@@ -44,6 +44,7 @@ export default {
 
         handleConfirm() {
             this.$emit('submit')
+            this.$emit('close')
         },
     },
     mounted() {

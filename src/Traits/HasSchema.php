@@ -22,7 +22,7 @@ trait HasSchema
                 'viaResource' => $this->viaResource,
                 'viaRelationship' => $this->viaRelationship,
                 'viaResourceId' => $this->viaResourceId,
-                'status' => self::CREATED,
+                self::STATUS => self::CREATED,
                 'heading' => $this->getHeading(),
                 'attribute' => self::ATTRIBUTE_PREFIX . $this->attribute,
                 'fields' => $this->setFieldsAttribute($this->creationFields($this->getRelation()->getRelated()))->values(),

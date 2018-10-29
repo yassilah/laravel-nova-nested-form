@@ -11,10 +11,11 @@ use Yassi\NestedForm\Traits\HasPrefix;
 use Yassi\NestedForm\Traits\HasRelation;
 use Yassi\NestedForm\Traits\HasResource;
 use Yassi\NestedForm\Traits\HasSchema;
+use Yassi\NestedForm\Traits\RedirectsRequests;
 
 class NestedForm extends Field
 {
-    use HasPrefix, HasAttribute, HasHeading, HasRelation, HasResource, HasChildren, HasSchema, CanSetFieldsAttribute;
+    use HasPrefix, HasAttribute, HasHeading, HasRelation, HasResource, HasChildren, HasSchema, CanSetFieldsAttribute, RedirectsRequests;
 
     /**
      * Constants for field status.
@@ -29,6 +30,8 @@ class NestedForm extends Field
      */
     const ATTRIBUTE_PREFIX = 'nested:';
     const INDEX = '{{index}}';
+    const STATUS = '__status';
+    const PREFIX = '__prefix';
 
     /**
      * The field's component.
@@ -93,6 +96,13 @@ class NestedForm extends Field
             'component' => $this->component(),
             'INDEX' => self::INDEX,
             'ATTRIBUTE_PREFIX' => self::ATTRIBUTE_PREFIX,
+            'UNCHANGED' => self::UNCHANGED,
+            'CREATED' => self::CREATED,
+            'REMOVED' => self::REMOVED,
+            'UPDATED' => self::UPDATED,
+            'STATUS' => self::STATUS,
+            'PREFIX' => self::PREFIX,
+            'name' => $this->name,
         ], $this->meta());
     }
 }

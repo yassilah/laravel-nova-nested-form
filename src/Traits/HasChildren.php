@@ -36,7 +36,7 @@ trait HasChildren
             'viaResource' => $this->viaResource,
             'viaRelationship' => $this->viaRelationship,
             'viaResourceId' => $this->viaResourceId,
-            'status' => self::UNCHANGED,
+            self::STATUS => null,
             'heading' => $this->getHeading(),
             'attribute' => self::ATTRIBUTE_PREFIX . $this->attribute,
             'fields' => $this->setFieldsAttribute($this->updateFields($model))->values(),

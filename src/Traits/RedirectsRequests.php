@@ -29,6 +29,13 @@ trait RedirectsRequests
     {
         $data = $request->all();
 
+        foreach ($data as $key => $value) {
+            if (str_contains($key, self::ATTRIBUTE_PREFIX)) {
+                $data[str_replace(self::ATTRIBUTE_PREFIX, '', $key)] = $value;
+                unset($data[$key]);
+            }
+        }
+
         if (isset($data[$attribute])) {
             foreach ($data[$attribute] as $data) {
                 $this->run($request, $this->newRequestData($data, $model, $attribute, $request->_retrieved_at));
@@ -46,12 +53,12 @@ trait RedirectsRequests
     protected function run(NovaRequest $request, array $data)
     {
         try {
-            if ($data['status'] === self::UNCHANGED) {
-                return $this->relationship->getClass()::fillForUpdate($request->replace($data), $this->relationship->getClass()::newModel()->forceFill($data));
+            if ($data[self::STATUS] === self::UNCHANGED) {
+                return $this->relatedResource::fillForUpdate($request->replace($data), $this->relatedResource::newModel()->forceFill($data));
             }
-            return $this->controller($data)->handle($this->request($request, $data));
+            $this->controller($data)->handle($this->request($request, $data));
         } catch (ValidationException $e) {
-            throw new NestedValidationException($e, $data['prefix']);
+            throw new NestedValidationException($e, $data[self::PREFIX]);
         }
     }
 
@@ -64,7 +71,7 @@ trait RedirectsRequests
      */
     protected function request(NovaRequest $request, array $data)
     {
-        switch ($data['status']) {
+        switch ($data[self::STATUS]) {
             case self::UPDATED:
                 return UpdateResourceRequest::createFrom($request)->replace($data);
             case self::CREATED:
@@ -82,7 +89,7 @@ trait RedirectsRequests
      */
     protected function controller(array $data)
     {
-        switch ($data['status']) {
+        switch ($data[self::STATUS]) {
             case self::UPDATED:
                 $controller = ResourceUpdateController::class;
                 break;
@@ -106,13 +113,14 @@ trait RedirectsRequests
      * @param int $retrieved_at
      * @return array
      */
-    protected function query(Model $model, string $attribute, int $retrieved_at)
+    protected function query(Model $model, string $attribute, array $data, int $retrieved_at)
     {
         return [
             'viaResource' => Nova::resourceForModel(get_class($model))::uriKey(),
-            'viaRelationship' => $this->relationship->getName(),
+            'viaRelationship' => $this->viaRelationship,
             'viaResourceId' => $model->id,
-            'resource' => str_replace(self::ATTRIBUTE_PREFIX, '', $attribute),
+            'resource' => $attribute,
+            'resourceId' => $data['id'] ?? null,
             '_retrieved_at' => $retrieved_at,
         ];
     }
@@ -136,7 +144,7 @@ trait RedirectsRequests
                 $value = null;
             }
 
-            $newData[str_replace(self::ATTRIBUTE_PREFIX, '', $attribute)] = $value;
+            $newData[$attribute] = $value;
         }
 
         return $newData;
@@ -153,6 +161,6 @@ trait RedirectsRequests
      */
     protected function newRequestData(array $data, Model $model, string $attribute, int $retrieved_at)
     {
-        return array_merge($this->data($data), $this->query($model, $attribute, $retrieved_at));
+        return array_merge($this->data($data), $this->query($model, $attribute, $data, $retrieved_at));
     }
 }

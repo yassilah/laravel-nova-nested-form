@@ -24,9 +24,13 @@ trait HasAttribute
     public function setAttribute($index = self::INDEX)
     {
         $viaRelationship = Request::get('nested-attribute') ? '[' . $this->viaRelationship . ']' : $this->viaRelationship;
+
         $this->currentAttribute = isset($this->meta['has_many']) ? $viaRelationship . '[' . $index . ']' : $viaRelationship;
+
         $this->attribute = Request::get('nested-attribute') . $this->currentAttribute;
+
         Request::merge(['nested-attribute' => $this->attribute]);
+
         return $this;
     }
 
@@ -38,6 +42,8 @@ trait HasAttribute
     protected function removeAttribute()
     {
         Request::merge(['nested-attribute' => str_replace_last($this->currentAttribute, '', $this->attribute)]);
+
+        $this->attribute = $this->viaRelationship;
 
         return $this;
     }
