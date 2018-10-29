@@ -59,6 +59,12 @@ You can also nest your relationship forms by adding another NestedForm into the 
 
 You can modify the default heading using the heading() method. You can use wildcards to add dynamic content to your label such as '{{id}}', '{{index}}' or any attribute present in the form.
 ```
-NestedForm::make('Posts')
-->heading('{{index}} // Post - {{title}}')
+NestedForm::make(Post::class)->heading('{{index}} // Post - {{title}}')
+```
+
+# Modify the index separator
+
+You can modify the default index separator using the separator() method when you have nested forms (e.g. 1. Post, 1.1. Comment, 1.1.1. Like).
+```
+NestedForm::make(Post::class)->separator('\')
 ```
