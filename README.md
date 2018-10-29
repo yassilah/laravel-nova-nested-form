@@ -8,6 +8,17 @@ This package allows you to include your nested relationships' forms into a paren
 composer require yassi/nova-nested-form
 ```
 
+Then add the NestedFormTrait to your App\Nova\Resource class.
+
+```
+use Yassi\NestedForm\Traits\NestedFormTrait;
+
+abstract class Resource extends NovaResource
+{
+    use NestedFormTrait;
+````
+
+
 # Attach a new relationship form to a resource
 
 Simply add a NestedForm into your fields. The first parameter must be an existing NovaResource class and the second parameter (optional) must be an existing HasOneOrMany relationship in your model.

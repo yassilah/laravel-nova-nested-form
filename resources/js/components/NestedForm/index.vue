@@ -70,6 +70,7 @@ export default {
                 }
             })
 
+            schema.attribute = schema.attribute.replace(this.field.INDEX, this.children.length)
             schema.heading = schema.heading.replace(this.field.INDEX, this.children.length + 1)
 
             return schema
