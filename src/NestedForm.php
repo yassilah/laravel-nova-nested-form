@@ -80,7 +80,7 @@ class NestedForm extends Field
      */
     protected function setName()
     {
-        $this->name = title_case(str_singular($this->viaRelationship));
+        $this->name = str_replace('_', ' ', title_case(str_singular($this->viaRelationship)));
 
         return $this;
     }
