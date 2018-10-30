@@ -59,7 +59,7 @@ class NestedForm extends Field
      */
     public function __construct(string $resourceClass, string $viaRelationship = null, string $name = null)
     {
-        $this->setRelatedResource($resourceClass)->setName($name)->setViaRelationship($viaRelationship);
+        $this->setRelatedResource($resourceClass)->setViaRelationship($viaRelationship)->setName($name);
     }
 
     public function resolve($resource, $attribute = null)
