@@ -27,22 +27,25 @@ trait RedirectsRequests
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
-        $data = $request->all();
-
-        foreach ($data as $key => $value) {
-            if (str_contains($key, self::ATTRIBUTE_PREFIX)) {
-                $data[str_replace(self::ATTRIBUTE_PREFIX, '', $key)] = $value;
-                unset($data[$key]);
+        if ($model->exists) {
+            $data = $request->all();
+            foreach ($data as $key => $value) {
+                if (str_contains($key, self::ATTRIBUTE_PREFIX)) {
+                    $data[str_replace(self::ATTRIBUTE_PREFIX, '', $key)] = $value;
+                    unset($data[$key]);
+                }
             }
-        }
-
-        if (isset($data[$attribute])) {
-            foreach ($data[$attribute] as $data) {
-                $this->run($request, $this->newRequestData($data, $model, $attribute, $request->_retrieved_at));
+            if (isset($data[$attribute])) {
+                foreach ($data[$attribute] as $data) {
+                    $this->run($request, $this->newRequestData($data, $model, $attribute, $request->_retrieved_at));
+                }
             }
+            $request->request->remove($attribute);
+        } else {
+            $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
+                $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
+            });
         }
-
-        $request->request->remove($attribute);
     }
 
     /**
