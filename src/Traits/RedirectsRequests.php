@@ -113,7 +113,7 @@ trait RedirectsRequests
      * @param int $retrieved_at
      * @return array
      */
-    protected function query(Model $model, string $attribute, array $data, int $retrieved_at)
+    protected function query(Model $model, string $attribute, array $data, $retrieved_at)
     {
         return [
             'viaResource' => Nova::resourceForModel(get_class($model))::uriKey(),
@@ -159,7 +159,7 @@ trait RedirectsRequests
      * @param int $retrieved_at
      * @return array
      */
-    protected function newRequestData(array $data, Model $model, string $attribute, int $retrieved_at)
+    protected function newRequestData(array $data, Model $model, string $attribute, $retrieved_at)
     {
         return array_merge($this->data($data), $this->query($model, $attribute, $data, $retrieved_at));
     }
