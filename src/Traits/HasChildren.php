@@ -33,6 +33,7 @@ trait HasChildren
 
         $array = [
             'resourceId' => $model->id,
+            'resourceName' => Nova::resourceForModel($this->getRelation()->getRelated())::uriKey(),
             'viaResource' => $this->viaResource,
             'viaRelationship' => $this->viaRelationship,
             'viaResourceId' => $this->viaResourceId,

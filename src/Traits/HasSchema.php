@@ -20,6 +20,7 @@ trait HasSchema
         $this->withMeta([
             'schema' => [
                 'viaResource' => $this->viaResource,
+                'resourceName' => Nova::resourceForModel($this->getRelation()->getRelated())::uriKey(),
                 'viaRelationship' => $this->viaRelationship,
                 'viaResourceId' => $this->viaResourceId,
                 self::STATUS => self::CREATED,

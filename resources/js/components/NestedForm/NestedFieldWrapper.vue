@@ -20,7 +20,7 @@
                        :key="index"
                        :field="subfield"
                        :errors="errors"
-                       :resource-name="field.viaRelationship"
+                       :resource-name="field.resourceName"
                        :resource-id="field.viaResourceId"
                        :is="'form-' + subfield.component" />
         </div>
