@@ -57,9 +57,9 @@ class NestedForm extends Field
     /**
      * Constructor.
      */
-    public function __construct(string $resourceClass, string $viaRelationship = null)
+    public function __construct(string $resourceClass, string $viaRelationship = null, string $name = null)
     {
-        $this->setRelatedResource($resourceClass)->setViaRelationship($viaRelationship);
+        $this->setRelatedResource($resourceClass)->setName($name)->setViaRelationship($viaRelationship);
     }
 
     public function resolve($resource, $attribute = null)
@@ -68,7 +68,7 @@ class NestedForm extends Field
             ->setViaResource()
             ->setViaResourceId()
             ->setRelationType()
-            ->setName()
+            ->setName($this->name)
             ->setChildren()
             ->setSchema();
     }
@@ -78,9 +78,9 @@ class NestedForm extends Field
      *
      * @return  self
      */
-    protected function setName()
+    protected function setName(string $name = null)
     {
-        $this->name = str_replace('_', ' ', title_case(str_singular($this->viaRelationship)));
+        $this->name = $name ?? str_replace('_', ' ', title_case(str_singular($this->viaRelationship)));
 
         return $this;
     }
