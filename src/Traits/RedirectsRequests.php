@@ -36,8 +36,13 @@ trait RedirectsRequests
                 }
             }
             if (isset($data[$attribute])) {
-                foreach ($data[$attribute] as $data) {
-                    $this->run($request, $this->newRequestData($data, $model, $attribute, $request->_retrieved_at));
+                foreach ($data[$attribute] as $index => $value) {
+                    if (is_int($index)) {
+                        $this->run($request, $this->newRequestData($value, $model, $attribute, $request->_retrieved_at));
+                    } else {
+                        $this->run($request, $this->newRequestData($data[$attribute], $model, $attribute, $request->_retrieved_at));
+                        break;
+                    }
                 }
             }
             $request->request->remove($attribute);
