@@ -4,6 +4,7 @@ namespace Yassi\NestedForm\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 
 trait HasSchema
 {
@@ -20,6 +21,7 @@ trait HasSchema
         $this->withMeta([
             'schema' => [
                 'viaResource' => $this->viaResource,
+                'resourceName' => Nova::resourceForModel($this->getRelation()->getRelated())::uriKey(),
                 'viaRelationship' => $this->viaRelationship,
                 'viaResourceId' => $this->viaResourceId,
                 self::STATUS => self::CREATED,
