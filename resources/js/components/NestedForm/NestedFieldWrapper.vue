@@ -8,8 +8,10 @@
                    class="cursor-pointer select-none mx-2">
                     <Caret />
                 </a>
-                <a class="text-2xl font-bold text-danger cursor-pointer select-none rounded-full mx-2"
-                   @click="showDeleteModal = true">x</a>
+
+                <button @click="showDeleteModal = true" title="delete" class="appearance-none cursor-pointer text-70 hover:text-primary mr-3">
+                    <icon />
+                </button>
             </div>
         </div>
         <!-- HEADING -->
@@ -67,7 +69,7 @@ export default {
 
     data() {
         return {
-            visible: false,
+            visible: true,
             showDeleteModal: false
         }
     },
@@ -79,6 +81,11 @@ export default {
                     this.$parent.getFieldValue(this.field.fields.find(field => field.original_attribute === key))
             }).replace(/ - $/, '')
         }
+    },
+
+    created() {
+        console.log(this.field);
+        console.log(this.parent);
     },
 
 
