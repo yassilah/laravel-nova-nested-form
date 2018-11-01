@@ -4,13 +4,12 @@
         <div class="p-4 text-90 border-b border-40 flex justify-between items-center bg-30">
             <h1 class="font-normal text-xl capitalize">{{heading}}</h1>
             <div class="flex justify-between items-center">
-                <a @click="toggleVisibility"
-                   class="cursor-pointer select-none mx-2">
-                    <Caret />
-                </a>
+                <button @click="toggleVisibility" class="appearance-none cursor-pointer text-70 hover:text-primary mr-3">
+                    <icon type="view" />
+                </button>
 
                 <button @click="showDeleteModal = true" title="delete" class="appearance-none cursor-pointer text-70 hover:text-primary mr-3">
-                    <icon />
+                    <icon type="delete" />
                 </button>
             </div>
         </div>
@@ -69,7 +68,7 @@ export default {
 
     data() {
         return {
-            visible: true,
+            visible: false,
             showDeleteModal: false
         }
     },
