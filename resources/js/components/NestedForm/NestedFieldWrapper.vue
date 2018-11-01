@@ -82,12 +82,6 @@ export default {
         }
     },
 
-    created() {
-        console.log(this.field);
-        console.log(this.parent);
-    },
-
-
     methods: {
         /**
          * This toggles the visibility of the 
