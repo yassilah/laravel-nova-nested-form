@@ -4,12 +4,19 @@
         <div class="p-4 text-90 border-b border-40 flex justify-between items-center bg-30">
             <h1 class="font-normal text-xl capitalize">{{heading}}</h1>
             <div class="flex justify-between items-center">
-                <a @click="toggleVisibility"
-                   class="cursor-pointer select-none mx-2">
-                    <Caret />
-                </a>
-                <a class="text-2xl font-bold text-danger cursor-pointer select-none rounded-full mx-2"
-                   @click="showDeleteModal = true">x</a>
+
+                <div @click="toggleVisibility"
+                     class="appearance-none cursor-pointer text-70 hover:text-primary mr-3 items-center flex">
+                    <icon type="view"
+                          width="22"
+                          height="18"
+                          view-box="0 0 22 16" />
+                </div>
+
+                <div @click="showDeleteModal = true"
+                     class="appearance-none cursor-pointer text-70 hover:text-danger mr-3 items-center flex">
+                    <icon type="delete" />
+                </div>
             </div>
         </div>
         <!-- HEADING -->
@@ -40,13 +47,12 @@
 <script>
 import { FormField, HandlesValidationErrors } from 'laravel-nova'
 import DeleteModal from './../Modals/Delete'
-import Caret from './../Caret'
 
 export default {
     mixins: [HandlesValidationErrors, FormField],
 
 
-    components: { DeleteModal, Caret },
+    components: { DeleteModal },
 
 
     props: {
@@ -80,7 +86,6 @@ export default {
             }).replace(/ - $/, '')
         }
     },
-
 
     methods: {
         /**
