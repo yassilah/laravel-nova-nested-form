@@ -24,10 +24,13 @@ trait HasSchema
                 'resourceName' => Nova::resourceForModel($this->getRelation()->getRelated())::uriKey(),
                 'viaRelationship' => $this->viaRelationship,
                 'viaResourceId' => $this->viaResourceId,
-                self::STATUS => self::CREATED,
                 'heading' => $this->getHeading(),
                 'attribute' => self::ATTRIBUTE_PREFIX . $this->attribute,
+                'opened' => true,
+                'max' => $this->meta['max'] ?? 0,
+                'min' => $this->meta['min'] ?? 0,
                 'fields' => $this->setFieldsAttribute($this->creationFields($this->getRelation()->getRelated()))->values(),
+                self::STATUS => self::CREATED,
             ],
         ]);
 

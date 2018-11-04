@@ -22,7 +22,7 @@
         <!-- HEADING -->
 
         <!-- ACTUAL FIELDS -->
-        <div v-show="visible">
+        <div v-show="field.opened">
             <component v-for="(subfield, index) in field.fields"
                        :key="index"
                        :field="subfield"
@@ -73,7 +73,6 @@ export default {
 
     data() {
         return {
-            visible: false,
             showDeleteModal: false
         }
     },
@@ -93,8 +92,8 @@ export default {
          * content of the related resource
          */
         toggleVisibility() {
-            this.visible = !this.visible
+            this.field.opened = !this.field.opened
         },
-    }
+    },
 }
 </script>

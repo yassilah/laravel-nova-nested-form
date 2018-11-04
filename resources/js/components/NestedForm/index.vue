@@ -15,7 +15,7 @@
 
         <!-- ADD A NEW NESTED RESOURCE -->
         <div class="p-2 text-90 border-b border-40 flex justify-center items-center bg-30"
-             v-if="field.has_many || children.length === 0">
+             v-if="displayAddButton">
             <button type="button"
                     class="btn btn-sm text-white bg-primary-dark btn-default leading-none flex items-center"
                     @click="add()">Add a new {{field.name}}</button>
@@ -37,6 +37,9 @@ export default {
     computed: {
         children() {
             return this.field.children.filter(child => child[this.field.STATUS] !== this.field.REMOVED)
+        },
+        displayAddButton() {
+            return (this.field.has_many || this.children.length === 0) && (this.field.max > 0 ? this.field.max > this.children.length : true)
         }
     },
 
@@ -161,6 +164,14 @@ export default {
                 }
             }
         },
+    },
+    created() {
+        if (this.field.min > 0 && this.field.children.length < this.field.min) {
+            const diff = this.field.min - this.field.children.length
+            for (let i = 0; i < diff; i++) {
+                this.add()
+            }
+        }
     }
 }
 </script>

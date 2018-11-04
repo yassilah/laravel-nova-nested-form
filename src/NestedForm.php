@@ -3,6 +3,8 @@
 namespace Yassi\NestedForm;
 
 use Laravel\Nova\Fields\Field;
+use Yassi\NestedForm\Traits\CanBeCollapsed;
+use Yassi\NestedForm\Traits\CanHaveLimits;
 use Yassi\NestedForm\Traits\CanSetFieldsAttribute;
 use Yassi\NestedForm\Traits\HasAttribute;
 use Yassi\NestedForm\Traits\HasChildren;
@@ -15,7 +17,7 @@ use Yassi\NestedForm\Traits\RedirectsRequests;
 
 class NestedForm extends Field
 {
-    use HasPrefix, HasAttribute, HasHeading, HasRelation, HasResource, HasChildren, HasSchema, CanSetFieldsAttribute, RedirectsRequests;
+    use HasPrefix, HasAttribute, HasHeading, HasRelation, HasResource, HasChildren, HasSchema, CanSetFieldsAttribute, CanBeCollapsed, CanHaveLimits, RedirectsRequests;
 
     /**
      * Constants for field status.
@@ -62,6 +64,14 @@ class NestedForm extends Field
         $this->setRelatedResource($resourceClass)->setViaRelationship($viaRelationship)->setName($name);
     }
 
+    /**
+     * Resolve the form fields.
+     *
+     * @param $resource
+     * @param $attribute
+     *
+     * @return void
+     */
     public function resolve($resource, $attribute = null)
     {
         $this->setResource($resource)
@@ -94,6 +104,7 @@ class NestedForm extends Field
     {
         return array_merge([
             'component' => $this->component(),
+            'prefixComponent' => true,
             'INDEX' => self::INDEX,
             'ATTRIBUTE_PREFIX' => self::ATTRIBUTE_PREFIX,
             'UNCHANGED' => self::UNCHANGED,

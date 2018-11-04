@@ -38,10 +38,13 @@ trait HasChildren
             'viaResource' => $this->viaResource,
             'viaRelationship' => $this->viaRelationship,
             'viaResourceId' => $this->viaResourceId,
-            self::STATUS => null,
             'heading' => $this->getHeading(),
             'attribute' => self::ATTRIBUTE_PREFIX . $this->attribute,
+            'opened' => isset($this->meta['opened']) && ($this->meta['opened'] === 'only first' ? $index === 0 : $this->meta['opened']),
             'fields' => $this->setFieldsAttribute($this->updateFields($model))->values(),
+            'max' => $this->meta('max'),
+            'min' => $this->meta('min'),
+            self::STATUS => null,
         ];
 
         $this->removePrefix()->removeAttribute();
