@@ -95,5 +95,16 @@ export default {
             this.field.opened = !this.field.opened
         },
     },
+
+    watch: {
+        errors({ errors }) {
+            for (let attribute in errors) {
+                if (attribute.includes(this.field.attribute)) {
+                    this.field.opened = true
+                    break
+                }
+            }
+        }
+    }
 }
 </script>

@@ -59,12 +59,13 @@ export default {
             // }
         },
 
-        replaceIndexesInSchema(field = this.field) {
+        replaceIndexesInSchema(field) {
             const schema = JSON.parse(JSON.stringify(field.schema))
 
             schema.fields.forEach(child => {
 
                 if (child.schema) {
+                    child.schema.opened = false
                     child.schema = this.replaceIndexesInSchema(child)
                 }
 
@@ -83,7 +84,7 @@ export default {
          * This adds a resource to the children
          */
         add() {
-            this.field.children.push(this.replaceIndexesInSchema())
+            this.field.children.push(this.replaceIndexesInSchema(this.field))
         },
 
         /**

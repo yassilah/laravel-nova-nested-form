@@ -29,12 +29,14 @@ trait RedirectsRequests
     {
         if ($model->exists) {
             $data = $request->all();
+
             foreach ($data as $key => $value) {
                 if (str_contains($key, self::ATTRIBUTE_PREFIX)) {
                     $data[str_replace(self::ATTRIBUTE_PREFIX, '', $key)] = $value;
                     unset($data[$key]);
                 }
             }
+
             if (isset($data[$attribute])) {
                 foreach ($data[$attribute] as $index => $value) {
                     if (is_int($index)) {
@@ -45,6 +47,7 @@ trait RedirectsRequests
                     }
                 }
             }
+
             $request->request->remove($attribute);
         } else {
             $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
@@ -62,7 +65,9 @@ trait RedirectsRequests
     {
         try {
             if ($data[self::STATUS] === self::UNCHANGED) {
-                return $this->relatedResource::fillForUpdate($request->replace($data), $this->relatedResource::newModel()->forceFill($data));
+                $newModel = $this->relatedResource::newModel()->forceFill($data);
+                $newModel->exists = true;
+                return $this->relatedResource::fillForUpdate($request->replace($data), $newModel);
             }
             $this->controller($data)->handle($this->request($request, $data));
         } catch (ValidationException $e) {
