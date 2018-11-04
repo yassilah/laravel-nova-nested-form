@@ -88,13 +88,13 @@ You can also nest your relationship forms by adding another NestedForm into the 
 
 # NEW: Add a minimum or a maximum number of children
 
-For instance, if you want vey user to have at least 3 posts and at most 5, simply use:
+For instance, if you want every user to have at least 3 posts and at most 5 posts, simply use:
 
 ```
 NestedForm::make('Posts')->min(3)->max(5)
 ```
 
-When creating a new user, 3 blank post will then appear. If you reach the maximum number of posts, the "Add a new post" button will disappear.
+When creating a new user, 3 blank posts will be displayed. If you reach the maximum number of posts, the "Add a new post" button will disappear.
 
 # NEW: Set the default open/collapse behavior
 
@@ -124,8 +124,4 @@ You can modify the default index separator using the separator() method when you
 
 ```
 NestedForm::make('Posts')->separator('\')
-```
-
-```
-
 ```
