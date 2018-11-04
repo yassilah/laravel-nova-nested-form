@@ -34,7 +34,7 @@
         <!-- ACTUAL FIELDS -->
 
         <!-- DELETION MODAL -->
-        <DeleteModal :resourceSingularName="$parent.field.name"
+        <DeleteModal :resourceSingularName="$parent.field.singularName"
                      :resource="field"
                      @submit="$emit('remove', field)"
                      @close="showDeleteModal = false"

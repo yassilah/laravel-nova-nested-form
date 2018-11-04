@@ -18,7 +18,7 @@
              v-if="displayAddButton">
             <button type="button"
                     class="btn btn-sm text-white bg-primary-dark btn-default leading-none flex items-center"
-                    @click="add()">Add a new {{field.name}}</button>
+                    @click="add()">{{ __('Add a new :resourceSingularName', { resourceSingularName: field.singularName }) }}</button>
         </div>
         <!-- ADD A NEW NESTED RESOURCE -->
 

@@ -114,6 +114,7 @@ class NestedForm extends Field
             'STATUS' => self::STATUS,
             'PREFIX' => self::PREFIX,
             'name' => $this->name,
+            'singularName' => str_singular($this->name),
         ], $this->meta());
     }
 }

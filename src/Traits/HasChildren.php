@@ -42,8 +42,8 @@ trait HasChildren
             'attribute' => self::ATTRIBUTE_PREFIX . $this->attribute,
             'opened' => isset($this->meta['opened']) && ($this->meta['opened'] === 'only first' ? $index === 0 : $this->meta['opened']),
             'fields' => $this->setFieldsAttribute($this->updateFields($model))->values(),
-            'max' => $this->meta('max'),
-            'min' => $this->meta('min'),
+            'max' => $this->meta['max'] ?? 0,
+            'min' => $this->meta['min'] ?? 0,
             self::STATUS => null,
         ];
 
