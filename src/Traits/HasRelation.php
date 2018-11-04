@@ -4,6 +4,7 @@ namespace Yassi\NestedForm\Traits;
 
 use Exception;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Laravel\Nova\Fields\ResourceRelationshipGuesser;
 use ReflectionClass;
 
 trait HasRelation
@@ -82,9 +83,9 @@ trait HasRelation
      *
      * @return  self
      */
-    protected function setRelatedResource(string $resourceClass)
+    protected function setRelatedResource(string $resourceClass = null)
     {
-        $this->relatedResource = $resourceClass;
+        $this->relatedResource = $resourceClass ?? ResourceRelationshipGuesser::guessResource($this->name);
 
         return $this;
     }
