@@ -22,7 +22,10 @@ Is now the same as:
 NestedForm::make('Posts', 'posts', Post::class)
 ```
 
-Also, translations are now available in your nested field!
+Also, translations are now available in your nested field! You just need to add this key in you language file:
+```
+"Add a new :resourceSingularName": "Ajouter un(e) :resourceSingularName"
+```
 
 # Installation
 
