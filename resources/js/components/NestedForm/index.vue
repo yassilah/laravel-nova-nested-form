@@ -165,8 +165,20 @@ export default {
                 }
             }
         },
+        /**
+         * This sets the belongsToId property of the nested resource
+         * with the correct resource id of its relation 'viaResourceId'.
+         */
+        setBelongsToId(fields){
+            fields.forEach(field => {
+                if (field.component === 'belongs-to-field') {
+                    field.belongsToId = this.field.schema.viaResourceId;
+                }
+            })
+        },
     },
     created() {
+        this.setBelongsToId(this.field.schema.fields);
         if (this.field.min > 0 && this.field.children.length < this.field.min) {
             const diff = this.field.min - this.field.children.length
             for (let i = 0; i < diff; i++) {
