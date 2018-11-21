@@ -10,14 +10,20 @@
         </div>
         <!-- HEADING -->
 
-        <!-- ACTUAL FIELDS -->
-        <nested-form-field v-for="(child, index) in field.children"
-                           :key="`${field.attribute}-${index}`"
-                           :index="index"
-                           :field="field"
-                           :child="child"
-                           :errors="errors" />
-        <!-- ACTUAL FIELDS -->
+        <template v-if="field.children.length > 0">
+            <!-- ACTUAL FIELDS -->
+            <nested-form-field v-for="(child, index) in field.children"
+                               :key="`${field.attribute}-${index}`"
+                               :index="index"
+                               :field="field"
+                               :child="child"
+                               :errors="errors" />
+            <!-- ACTUAL FIELDS -->
+        </template>
+
+        <template v-else>
+            <p class="m-8">No {{field.pluralLabel}}.</p>
+        </template>
 
     </div>
 </template>
