@@ -250,6 +250,7 @@ trait FillsSubAttributes
     protected function removeUntouched(Model $model)
     {
         if (count($this->touched) > 0 || $this->shouldRemoveAll) {
+
             if ($this->shouldRemoveAll) {
                 $ids = $model->{$this->viaRelationship}()->pluck('id');
             } else {
@@ -257,6 +258,8 @@ trait FillsSubAttributes
             }
 
             $request = DeleteResourceRequest::createFrom($this->request)->replace(['resources' => $ids]);
+
+            $request->query = new ParameterBag(['resource' => $this->resourceName]);
 
             $controller = new ResourceDestroyController;
 
