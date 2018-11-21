@@ -30,6 +30,15 @@ trait FillsSubAttributes
     protected $touched = [];
 
     /**
+     * Indicates whether all children
+     * should be removed because none was present
+     * in the request.
+     *
+     * @var bool
+     */
+    protected $shouldRemoveAll = false;
+
+    /**
      * Fills the attributes of the model within the container if the dependencies for the container are satisfied.
      *
      * @param NovaRequest $request
@@ -184,6 +193,8 @@ trait FillsSubAttributes
 
                 $this->touched[] = $value;
             }
+        } else {
+            $this->shouldRemoveAll = true;
         }
 
         return $this;
@@ -238,8 +249,12 @@ trait FillsSubAttributes
      */
     protected function removeUntouched(Model $model)
     {
-        if (count($this->touched) > 0) {
-            $ids = $model->{$this->viaRelationship}()->whereNotIn('id', array_column($this->touched, 'id'))->pluck('id');
+        if (count($this->touched) > 0 || $this->shouldRemoveAll) {
+            if ($this->shouldRemoveAll) {
+                $ids = $model->{$this->viaRelationship}()->pluck('id');
+            } else {
+                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', array_column($this->touched, 'id'))->pluck('id');
+            }
 
             $request = DeleteResourceRequest::createFrom($this->request)->replace(['resources' => $ids]);
 
