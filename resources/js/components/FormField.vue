@@ -22,7 +22,7 @@
         </template>
 
         <template v-else>
-            <p class="m-8">No {{field.pluralLabel}}.</p>
+            <p class="m-8">{{__('No :resourcePluralName', { resourcePluralName: field.pluralLabel })}}.</p>
         </template>
 
     </div>
