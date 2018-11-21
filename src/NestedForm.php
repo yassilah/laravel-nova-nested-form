@@ -2,38 +2,32 @@
 
 namespace Yassi\NestedForm;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Request as RequestFacade;
+use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\ResourceRelationshipGuesser;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Nova;
 use Yassi\NestedForm\Traits\CanBeCollapsed;
-use Yassi\NestedForm\Traits\CanHaveLimits;
-use Yassi\NestedForm\Traits\CanSetFieldsAttribute;
-use Yassi\NestedForm\Traits\HasAttribute;
+use Yassi\NestedForm\Traits\FillsSubAttributes;
 use Yassi\NestedForm\Traits\HasChildren;
 use Yassi\NestedForm\Traits\HasHeading;
-use Yassi\NestedForm\Traits\HasPrefix;
-use Yassi\NestedForm\Traits\HasRelation;
-use Yassi\NestedForm\Traits\HasResource;
+use Yassi\NestedForm\Traits\HasLimits;
 use Yassi\NestedForm\Traits\HasSchema;
-use Yassi\NestedForm\Traits\RedirectsRequests;
+use Yassi\NestedForm\Traits\HasSubfields;
 
 class NestedForm extends Field
 {
-    use HasPrefix, HasAttribute, HasHeading, HasRelation, HasResource, HasChildren, HasSchema, CanSetFieldsAttribute, CanBeCollapsed, CanHaveLimits, RedirectsRequests;
-
-    /**
-     * Constants for field status.
-     */
-    const UNCHANGED = 'unchanged';
-    const CREATED = 'created';
-    const UPDATED = 'updated';
-    const REMOVED = 'removed';
+    use HasChildren, HasSchema, HasSubfields, HasLimits, HasHeading, CanBeCollapsed, FillsSubAttributes;
 
     /**
      * Constants for placeholders.
      */
-    const ATTRIBUTE_PREFIX = 'nested:';
     const INDEX = '{{index}}';
-    const STATUS = '__status';
-    const PREFIX = '__prefix';
+    const ATTRIBUTE = '__attribute';
+    const ID = '__id';
 
     /**
      * The field's component.
@@ -41,6 +35,55 @@ class NestedForm extends Field
      * @var string
      */
     public $component = 'nested-form';
+
+    /**
+     * The class of the related resource.
+     *
+     * @var string
+     */
+    public $resourceClass;
+
+    /**
+     * The instance of the related resource.
+     *
+     * @var string
+     */
+    public $resourceInstance;
+
+    /**
+     * The URI key of the related resource.
+     *
+     * @var string
+     */
+    public $resourceName;
+
+    /**
+     * The displayable singular label of the relation.
+     *
+     * @var string
+     */
+    public $singularLabel;
+
+    /**
+     * The name of the Eloquent relationship.
+     *
+     * @var string
+     */
+    public $viaRelationship;
+
+    /**
+     * The type of the Eloquent relationship.
+     *
+     * @var string
+     */
+    public $relationType;
+
+    /**
+     * The current request instance.
+     *
+     * @var NovaRequest
+     */
+    protected $request;
 
     /**
      * Indicates if the element should be shown on the index view.
@@ -57,11 +100,35 @@ class NestedForm extends Field
     public $showOnDetail = false;
 
     /**
-     * Constructor.
+     * Create a new field.
+     *
+     * @param  string  $name
+     * @param  string|null  $attribute
+     * @param  string|null  $resource
+     * @return void
      */
-    public function __construct(string $name, string $viaRelationship = null, string $resourceClass = null)
+    public function __construct(string $name, $attribute = null, $resource = null)
     {
-        $this->setName($name)->setRelatedResource($resourceClass)->setViaRelationship($viaRelationship);
+        parent::__construct($name, $attribute);
+
+        $resource = $resource ?? ResourceRelationshipGuesser::guessResource($name);
+
+        $this->resourceClass = $resource;
+        $this->resourceInstance = new $resource($resource::newModel());
+        $this->resourceName = $resource::uriKey();
+        $this->viaRelationship = $this->attribute;
+        $this->setRequest();
+    }
+
+    /**
+     * Determine if the field should be displayed for the given request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function authorize(Request $request)
+    {
+        return call_user_func([$this->resourceClass, 'authorizedToViewAny'], $request) && parent::authorize($request);
     }
 
     /**
@@ -74,25 +141,38 @@ class NestedForm extends Field
      */
     public function resolve($resource, $attribute = null)
     {
-        $this->setResource($resource)
-            ->setViaResource()
-            ->setViaResourceId()
-            ->setRelationType()
-            ->setName($this->name)
-            ->setChildren()
-            ->setSchema();
+        $this->setRelationType($resource)->setViaResourceInformation($resource)->setSchema()->setChildren($resource);
     }
 
     /**
-     * Set name.
+     * Guess the type of relationship for the nested form.
      *
-     * @return  self
+     * @return string
      */
-    protected function setName(string $name)
+    protected function setRelationType(Model $resource)
     {
-        $this->name = $name;
+        if (!method_exists($resource, $this->viaRelationship)) {
+            throw new \Exception('The relation "' . $this->viaRelationship . '" does not exist on resource ' . get_class($resource) . '.');
+        }
 
-        return $this;
+        return $this->withMeta([
+            Str::snake((new \ReflectionClass($resource->{$this->viaRelationship}()))->getShortName()) => true,
+        ]);
+    }
+
+    /**
+     * Set the viaResource information as meta.
+     *
+     * @param Model $resource
+     *
+     * @return self
+     */
+    protected function setViaResourceInformation(Model $resource)
+    {
+        return $this->withMeta([
+            'viaResource' => Nova::resourceForModel($resource)::uriKey(),
+            'viaResourceId' => $resource->id,
+        ]);
     }
 
     /**
@@ -103,18 +183,31 @@ class NestedForm extends Field
     public function jsonSerialize()
     {
         return array_merge([
-            'component' => $this->component(),
+            'component' => $this->component,
             'prefixComponent' => true,
-            'INDEX' => self::INDEX,
-            'ATTRIBUTE_PREFIX' => self::ATTRIBUTE_PREFIX,
-            'UNCHANGED' => self::UNCHANGED,
-            'CREATED' => self::CREATED,
-            'REMOVED' => self::REMOVED,
-            'UPDATED' => self::UPDATED,
-            'STATUS' => self::STATUS,
-            'PREFIX' => self::PREFIX,
+            'resourceName' => $this->resourceName,
+            'viaRelationship' => $this->viaRelationship,
+            'listable' => true,
+            'singularLabel' => Str::singular($this->name),
+            'pluralLabel' => Str::plural($this->name),
             'name' => $this->name,
-            'singularName' => str_singular($this->name),
+            'attribute' => $this->attribute,
+            'INDEX' => self::INDEX,
+            'ATTRIBUTE' => self::ATTRIBUTE,
+            'ID' => self::ID,
         ], $this->meta());
+    }
+
+    /**
+     * Set the current request instance.
+     *
+     * @param Request $request
+     * @return self
+     */
+    protected function setRequest(Request $request = null)
+    {
+        $this->request = $request ?? NovaRequest::createFrom(RequestFacade::instance());
+
+        return $this;
     }
 }

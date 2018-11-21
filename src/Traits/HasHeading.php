@@ -2,6 +2,8 @@
 
 namespace Yassi\NestedForm\Traits;
 
+use Illuminate\Support\Str;
+
 trait HasHeading
 {
     /**
@@ -17,6 +19,13 @@ trait HasHeading
      * @var string
      */
     protected $separator = '.';
+
+    /**
+     * Prefix.
+     *
+     * @var string
+     */
+    protected $prefix = '';
 
     /**
      * Set heading template.
@@ -53,7 +62,7 @@ trait HasHeading
      */
     protected function defaultHeading()
     {
-        return str_singular($this->name);
+        return ($this->meta['has_many'] ? self::INDEX . $this->separator . ' ' : '') . Str::singular($this->name);
     }
 
     /**
@@ -63,7 +72,7 @@ trait HasHeading
      */
     protected function getHeading()
     {
-        return trim($this->prefix . ' ' . ($this->heading ?? $this->defaultHeading()));
+        return trim($this->prefix . ($this->heading ?? $this->defaultHeading()));
     }
 
 }

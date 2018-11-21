@@ -4,6 +4,7 @@ namespace Yassi\NestedForm\Exceptions;
 
 use Exception;
 use Illuminate\Validation\ValidationException;
+use Yassi\NestedForm\NestedForm;
 
 class NestedValidationException extends Exception
 {
@@ -17,15 +18,14 @@ class NestedValidationException extends Exception
     /**
      * Create a new exception instance.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @param  \Symfony\Component\HttpFoundation\Response  $response
-     * @param  string  $errorBag
+     * @param  ValidationException  $exception
+     * @param  string|null  $attribute
      * @return void
      */
-    public function __construct(ValidationException $exception, string $prefix)
+    public function __construct(ValidationException $exception, string $attribute = null)
     {
         $this->exception = $exception;
-        $this->prefix = $prefix;
+        $this->attribute = $attribute;
     }
 
     /**
@@ -48,9 +48,8 @@ class NestedValidationException extends Exception
      */
     public function errors()
     {
-
         return collect($this->exception->validator->errors()->messages())->mapWithKeys(function ($message, $attribute) {
-            return [$this->prefix . '[' . $attribute . ']' => $message];
+            return [$this->attribute . '[' . $attribute . ']' => $message];
         })->toArray();
     }
 

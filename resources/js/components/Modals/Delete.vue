@@ -31,10 +31,6 @@ export default {
         resourceSingularName: {
             type: String,
             required: true
-        },
-        resource: {
-            type: Object,
-            required: true
         }
     },
     methods: {

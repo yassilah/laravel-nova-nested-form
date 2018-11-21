@@ -2,7 +2,7 @@
 
 namespace Yassi\NestedForm\Traits;
 
-trait CanHaveLimits
+trait HasLimits
 {
 
     /**
