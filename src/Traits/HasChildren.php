@@ -22,7 +22,7 @@ trait HasChildren
     public function setChildren(Model $resource)
     {
         return $this->withMeta([
-            'children' => $resource->{$this->viaRelationship}->map(function ($item, $index) {
+            'children' => $resource->{$this->viaRelationship}()->get()->map(function ($item, $index) {
                 return [
                     'fields' => $this->getFields('showOnUpdate', $item, $index),
                     'heading' => $this->getHeading(),
