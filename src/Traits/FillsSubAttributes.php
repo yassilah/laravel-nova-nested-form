@@ -115,6 +115,7 @@ trait FillsSubAttributes
         return [
             'resource' => $this->resourceName,
             'resourceId' => $data[self::ID] ?? null,
+            'shouldRemoveAny' => $this->request->shouldRemoveAny ?? true,
             self::ATTRIBUTE => $this->attribute($attribute, $index),
         ];
     }
@@ -249,7 +250,7 @@ trait FillsSubAttributes
      */
     protected function removeUntouched(Model $model)
     {
-        if (count($this->touched) > 0 || $this->shouldRemoveAll) {
+        if ($this->request->shouldRemoveAny && (count($this->touched) > 0 || $this->shouldRemoveAll)) {
 
             if ($this->shouldRemoveAll) {
                 $ids = $model->{$this->viaRelationship}()->pluck('id');
