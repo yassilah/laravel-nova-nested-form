@@ -240,6 +240,8 @@ trait FillsSubAttributes
     protected function removeCurrentAttribute(NovaRequest $request, string $attribute)
     {
         $request->request->remove($attribute);
+
+        return $this;
     }
 
     /**
