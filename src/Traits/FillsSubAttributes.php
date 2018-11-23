@@ -48,8 +48,8 @@ trait FillsSubAttributes
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
-        if ($attribute === $this->attribute && isset($this->beforeFill)) {
-            $this->beforeFill($request, $model, $attribute, $requestAttribute);
+        if ($attribute === $this->attribute && isset($this->beforeFillCallback)) {
+            call_user_func($this->beforeFillCallback, $request, $model, $attribute, $requestAttribute);
         }
 
         if ($model->exists) {
@@ -65,8 +65,8 @@ trait FillsSubAttributes
             });
         }
 
-        if ($attribute === $this->attribute && isset($this->afterFill)) {
-            $this->afterFill($request, $model, $attribute, $requestAttribute);
+        if ($attribute === $this->attribute && isset($this->afterFillCallback)) {
+            call_user_func($this->afterFillCallback, $request, $model, $attribute, $requestAttribute);
         }
     }
 
@@ -283,25 +283,6 @@ trait FillsSubAttributes
     }
 
     /**
-     * Run the callback after the current attribute was filled.
-     *
-     * @param NovaRequest $request
-     * @param Model $model
-     * @param string $attribute
-     * @param string $requestAttribute
-     *
-     * @return self
-     */
-    protected function runFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
-    {
-        if (isset($this->fillCallbacks[$attribute]) && is_callable($this->fillCallbacks[$attribute])) {
-            $this->fillCallbacks[$attribute]($request, $model, $attribute, $requestAttribute);
-        }
-
-        return $this;
-    }
-
-    /**
      * Run the callback before the current attribute is filled.
      *
      * @param NovaRequest $request
@@ -313,8 +294,8 @@ trait FillsSubAttributes
      */
     protected function runBeforeFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
     {
-        if (isset($this->beforeFills[$attribute]) && is_callable($this->beforeFills[$attribute])) {
-            $this->runFillCallback($request, $model, $attribute, $requestAttribute);
+        if (isset($this->beforeFillCallbacks[$attribute]) && is_callable($this->beforeFillCallbacks[$attribute])) {
+            call_user_func($this->beforeFillCallbacks[$attribute], $request, $model, $attribute, $requestAttribute);
         }
 
         return $this;
@@ -332,8 +313,8 @@ trait FillsSubAttributes
      */
     protected function runAfterFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
     {
-        if (isset($this->afterFills[$attribute]) && is_callable($this->afterFills[$attribute])) {
-            $this->runFillCallback($request, $model, $attribute, $requestAttribute);
+        if (isset($this->afterFillCallbacks[$attribute]) && is_callable($this->afterFillCallbacks[$attribute])) {
+            call_user_func($this->afterFillCallbacks[$attribute], $request, $model, $attribute, $requestAttribute);
         }
 
         return $this;

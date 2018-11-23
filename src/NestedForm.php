@@ -104,28 +104,28 @@ class NestedForm extends Field
      *
      * @var array
      */
-    public $afterFills = [];
+    public $afterFillCallbacks = [];
 
     /**
      * Registered after callback.
      *
      * @var array
      */
-    public $afterFill;
+    public $afterFillCallback;
 
     /**
      * Registered before callbacks for specific attributes.
      *
      * @var array
      */
-    public $beforeFills = [];
+    public $beforeFillCallbacks = [];
 
     /**
      * Registered before callback.
      *
      * @var array
      */
-    public $beforeFill;
+    public $beforeFillCallback;
 
     /**
      * Create a new field.
@@ -171,9 +171,9 @@ class NestedForm extends Field
     public function afterFill($attribute, $callback = null)
     {
         if (is_callable($attribute)) {
-            $this->afterFill = $attribute;
+            $this->afterFillCallback = $attribute;
         } else {
-            $this->afterFills[] = [$attribute => $callback];
+            $this->afterFillCallbacks[] = [$attribute => $callback];
         }
 
         return $this;
@@ -191,9 +191,9 @@ class NestedForm extends Field
     public function beforeFill($attribute, $callback = null)
     {
         if (is_callable($attribute)) {
-            $this->beforeFill = $attribute;
+            $this->beforeFillCallback = $attribute;
         } else {
-            $this->beforeFills[] = [$attribute => $callback];
+            $this->beforeFillCallbacks[] = [$attribute => $callback];
         }
 
         return $this;
