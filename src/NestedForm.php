@@ -100,6 +100,34 @@ class NestedForm extends Field
     public $showOnDetail = false;
 
     /**
+     * Registered after callbacks for specific attributes.
+     *
+     * @var array
+     */
+    public $afterFills = [];
+
+    /**
+     * Registered after callback.
+     *
+     * @var array
+     */
+    public $afterFill;
+
+    /**
+     * Registered before callbacks for specific attributes.
+     *
+     * @var array
+     */
+    public $beforeFills = [];
+
+    /**
+     * Registered before callback.
+     *
+     * @var array
+     */
+    public $beforeFill;
+
+    /**
      * Create a new field.
      *
      * @param  string  $name
@@ -129,6 +157,46 @@ class NestedForm extends Field
     public function authorize(Request $request)
     {
         return call_user_func([$this->resourceClass, 'authorizedToViewAny'], $request) && parent::authorize($request);
+    }
+
+    /**
+     * Register a global callback or a callback for
+     * specific attributes (children) after it has been filled.
+     *
+     * @param string|callback $attribute
+     * @param callback|null $callback
+     *
+     * @return self
+     */
+    public function afterFill($attribute, $callback = null)
+    {
+        if (is_callable($attribute)) {
+            $this->afterFill = $attribute;
+        } else {
+            $this->afterFills[] = [$attribute => $callback];
+        }
+
+        return $this;
+    }
+
+    /**
+     * Register a global callback or a callback for
+     * specific attributes (children) before it has been filled.
+     *
+     * @param string|callback $attribute
+     * @param callback|null $callback
+     *
+     * @return self
+     */
+    public function beforeFill($attribute, $callback = null)
+    {
+        if (is_callable($attribute)) {
+            $this->beforeFill = $attribute;
+        } else {
+            $this->beforeFills[] = [$attribute => $callback];
+        }
+
+        return $this;
     }
 
     /**

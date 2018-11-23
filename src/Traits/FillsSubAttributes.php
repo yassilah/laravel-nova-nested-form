@@ -49,10 +49,12 @@ trait FillsSubAttributes
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
         if ($model->exists) {
-            $this->setRequest($request)
+            $this->runBeforeFillCallback($request, $model, $attribute, $requestAttribute)
+                ->setRequest($request)
                 ->runNestedOperations($attribute, $model)
                 ->removeUntouched($model)
-                ->removeCurrentAttribute($request, $attribute);
+                ->removeCurrentAttribute($request, $attribute)
+                ->runAfterFillCallback($request, $model, $attribute, $requestAttribute);
         } else {
             $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
@@ -265,6 +267,63 @@ trait FillsSubAttributes
             $controller = new ResourceDestroyController;
 
             $controller->handle($request);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Run the callback after the current attribute was filled.
+     *
+     * @param NovaRequest $request
+     * @param Model $model
+     * @param string $attribute
+     * @param string $requestAttribute
+     *
+     * @return self
+     */
+    protected function runFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
+    {
+        if (isset($this->fillCallbacks[$attribute]) && is_callable($this->fillCallbacks[$attribute])) {
+            $this->fillCallbacks[$attribute]($request, $model, $attribute, $requestAttribute);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Run the callback before the current attribute is filled.
+     *
+     * @param NovaRequest $request
+     * @param Model $model
+     * @param string $attribute
+     * @param string $requestAttribute
+     *
+     * @return self
+     */
+    protected function runBeforeFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
+    {
+        if (isset($this->beforeFills[$attribute]) && is_callable($this->beforeFills[$attribute])) {
+            $this->runFillCallback($request, $model, $attribute, $requestAttribute);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Run the callback before the current attribute is filled.
+     *
+     * @param NovaRequest $request
+     * @param Model $model
+     * @param string $attribute
+     * @param string $requestAttribute
+     *
+     * @return self
+     */
+    protected function runAfterFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
+    {
+        if (isset($this->afterFills[$attribute]) && is_callable($this->afterFills[$attribute])) {
+            $this->runFillCallback($request, $model, $attribute, $requestAttribute);
         }
 
         return $this;
