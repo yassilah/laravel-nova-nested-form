@@ -48,6 +48,10 @@ trait FillsSubAttributes
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
+        if ($attribute === $this->attribute && isset($this->beforeFill)) {
+            $this->beforeFill($request, $model, $attribute, $requestAttribute);
+        }
+
         if ($model->exists) {
             $this->runBeforeFillCallback($request, $model, $attribute, $requestAttribute)
                 ->setRequest($request)
@@ -59,6 +63,10 @@ trait FillsSubAttributes
             $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
             });
+        }
+
+        if ($attribute === $this->attribute && isset($this->afterFill)) {
+            $this->afterFill($request, $model, $attribute, $requestAttribute);
         }
     }
 
