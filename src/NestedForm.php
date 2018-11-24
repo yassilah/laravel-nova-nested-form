@@ -100,25 +100,11 @@ class NestedForm extends Field
     public $showOnDetail = false;
 
     /**
-     * Registered after callbacks for specific attributes.
-     *
-     * @var array
-     */
-    public $afterFillCallbacks = [];
-
-    /**
      * Registered after callback.
      *
      * @var array
      */
     public $afterFillCallback;
-
-    /**
-     * Registered before callbacks for specific attributes.
-     *
-     * @var array
-     */
-    public $beforeFillCallbacks = [];
 
     /**
      * Registered before callback.
@@ -163,18 +149,13 @@ class NestedForm extends Field
      * Register a global callback or a callback for
      * specific attributes (children) after it has been filled.
      *
-     * @param string|callback $attribute
-     * @param callback|null $callback
+     * @param callable $callback
      *
      * @return self
      */
-    public function afterFill($attribute, $callback = null)
+    public function afterFill(callable $callback)
     {
-        if (is_callable($attribute)) {
-            $this->afterFillCallback = $attribute;
-        } else {
-            $this->afterFillCallbacks[] = [$attribute => $callback];
-        }
+        $this->afterFillCallback = $callback;
 
         return $this;
     }
@@ -183,18 +164,13 @@ class NestedForm extends Field
      * Register a global callback or a callback for
      * specific attributes (children) before it has been filled.
      *
-     * @param string|callback $attribute
-     * @param callback|null $callback
+     * @param callable $callback
      *
      * @return self
      */
-    public function beforeFill($attribute, $callback = null)
+    public function beforeFill(callable $callback)
     {
-        if (is_callable($attribute)) {
-            $this->beforeFillCallback = $attribute;
-        } else {
-            $this->beforeFillCallbacks[] = [$attribute => $callback];
-        }
+        $this->beforeFillCallback = $callback;
 
         return $this;
     }

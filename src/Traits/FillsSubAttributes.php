@@ -48,25 +48,27 @@ trait FillsSubAttributes
      */
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
-        if ($attribute === $this->attribute && isset($this->beforeFillCallback)) {
-            call_user_func($this->beforeFillCallback, $request, $model, $attribute, $requestAttribute);
-        }
-
         if ($model->exists) {
-            $this->runBeforeFillCallback($request, $model, $attribute, $requestAttribute)
-                ->setRequest($request)
-                ->runNestedOperations($attribute, $model)
+
+            if (isset($this->beforeFillCallback)) {
+                call_user_func($this->beforeFillCallback, $request, $model, $attribute, $requestAttribute);
+                unset($this->beforeFillCallback);
+            }
+
+            $this->setRequest($request)
+                ->runNestedOperations($request, $attribute, $model)
                 ->removeUntouched($model)
-                ->removeCurrentAttribute($request, $attribute)
-                ->runAfterFillCallback($request, $model, $attribute, $requestAttribute);
+                ->removeCurrentAttribute($request, $attribute);
+
+            if (isset($this->afterFillCallback)) {
+                call_user_func($this->afterFillCallback, $request, $model, $attribute, $requestAttribute, $this->touched);
+                unset($this->afterFillCallback);
+            }
+
         } else {
             $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
             });
-        }
-
-        if ($attribute === $this->attribute && isset($this->afterFillCallback)) {
-            call_user_func($this->afterFillCallback, $request, $model, $attribute, $requestAttribute);
         }
     }
 
@@ -187,12 +189,14 @@ trait FillsSubAttributes
      * @param Model $model
      * @return self
      */
-    protected function runNestedOperations(string $attribute, Model $model)
+    protected function runNestedOperations(NovaRequest $request, string $attribute, Model $model)
     {
-        if (is_array($data = $this->request->{$attribute})) {
+        $data = $request->{$attribute} ?? null;
+
+        if (is_object($data) || is_array($data)) {
             foreach ($data as $index => $value) {
                 if (!is_int($index)) {
-                    $value = $this->request->{$attribute};
+                    $value = $request->{$attribute};
                     break;
                 }
 
@@ -277,44 +281,6 @@ trait FillsSubAttributes
             $controller = new ResourceDestroyController;
 
             $controller->handle($request);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Run the callback before the current attribute is filled.
-     *
-     * @param NovaRequest $request
-     * @param Model $model
-     * @param string $attribute
-     * @param string $requestAttribute
-     *
-     * @return self
-     */
-    protected function runBeforeFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
-    {
-        if (isset($this->beforeFillCallbacks[$attribute]) && is_callable($this->beforeFillCallbacks[$attribute])) {
-            call_user_func($this->beforeFillCallbacks[$attribute], $request, $model, $attribute, $requestAttribute);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Run the callback before the current attribute is filled.
-     *
-     * @param NovaRequest $request
-     * @param Model $model
-     * @param string $attribute
-     * @param string $requestAttribute
-     *
-     * @return self
-     */
-    protected function runAfterFillCallback(NovaRequest $request, Model $model, string $attribute, string $requestAttribute)
-    {
-        if (isset($this->afterFillCallbacks[$attribute]) && is_callable($this->afterFillCallbacks[$attribute])) {
-            call_user_func($this->afterFillCallbacks[$attribute], $request, $model, $attribute, $requestAttribute);
         }
 
         return $this;
