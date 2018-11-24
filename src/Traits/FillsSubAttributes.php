@@ -4,7 +4,9 @@ namespace Yassi\NestedForm\Traits;
 
 use Exception;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Request as RequestFacade;
 use Illuminate\Validation\ValidationException;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
 use Laravel\Nova\Http\Controllers\ResourceStoreController;
@@ -16,6 +18,7 @@ use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Laravel\Nova\Nova;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Yassi\NestedForm\Exceptions\NestedValidationException;
+use Yassi\NestedForm\NestedForm;
 
 trait FillsSubAttributes
 {
@@ -57,16 +60,17 @@ trait FillsSubAttributes
 
             $this->setRequest($request)
                 ->runNestedOperations($request, $attribute, $model)
-                ->removeUntouched($model)
-                ->removeCurrentAttribute($request, $attribute);
+                ->removeUntouched($model);
 
             if (isset($this->afterFillCallback)) {
                 call_user_func($this->afterFillCallback, $request, $model, $attribute, $requestAttribute, $this->touched);
                 unset($this->afterFillCallback);
             }
 
+            $this->removeCurrentAttribute($request, $attribute);
+
         } else {
-            $model::created(function ($model) use ($request, $requestAttribute, $attribute) {
+            $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
             });
         }
@@ -129,6 +133,7 @@ trait FillsSubAttributes
             'resourceId' => $data[self::ID] ?? null,
             'shouldRemoveAny' => $this->request->shouldRemoveAny ?? true,
             'currentIndex' => $index,
+            'parentIndex' => $this->request->currentIndex ?? null,
             self::ATTRIBUTE => $this->attribute($attribute, $index),
         ];
     }
@@ -144,7 +149,7 @@ trait FillsSubAttributes
     protected function data(array $data, Model $model)
     {
         foreach ($data as $attribute => &$value) {
-            if (blank($value) || $value === 'null') {
+            if (blank($value) || $value === 'null' || $value === 'undefined') {
                 $value = null;
             }
         }
@@ -171,7 +176,7 @@ trait FillsSubAttributes
         $current = $this->request->{self::ATTRIBUTE};
 
         if ($current) {
-            if (!preg_match("/\[$attribute\](?:\[[0-9]*\])?$/", $current)) {
+            if (!preg_match("/\[?$attribute\]?(?:\[[0-9]*\])?$/", $current)) {
                 $attribute = $current . '[' . $attribute . ']';
             } else {
                 $attribute = preg_replace("/(?:\[[0-9]*\])?$/", '', $current);
@@ -201,13 +206,15 @@ trait FillsSubAttributes
                     break;
                 }
 
-                $this->runNestedOperation($value, $model, $attribute, $index);
+                $this->runNestedOperation($value, $model, $attribute, $index, $request);
 
                 if ($value instanceof Response) {
                     abort($value->getStatusCode());
                 }
 
                 $this->touched[] = $value;
+
+                $this->setNewRequestValue($value);
             }
         } else {
             $this->shouldRemoveAll = true;
@@ -283,6 +290,23 @@ trait FillsSubAttributes
 
             $controller->handle($request);
         }
+
+        return $this;
+    }
+
+    /**
+     * Add newly created/updated data to the general request instance.
+     *
+     * @param mixed $value
+     * @return self
+     */
+    protected function setNewRequestValue($value)
+    {
+        $all = RequestFacade::instance()->all();
+        $path = preg_replace('/\[(.*?)\]/', '.$1', $this->request->{self::ATTRIBUTE});
+        $merged = array_merge($value->toArray(), data_get($all, $path));
+        data_set($all, $path, $merged);
+        RequestFacade::instance()->replace($all);
 
         return $this;
     }
