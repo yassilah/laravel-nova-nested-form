@@ -128,6 +128,7 @@ trait FillsSubAttributes
             'resource' => $this->resourceName,
             'resourceId' => $data[self::ID] ?? null,
             'shouldRemoveAny' => $this->request->shouldRemoveAny ?? true,
+            'currentIndex' => $index,
             self::ATTRIBUTE => $this->attribute($attribute, $index),
         ];
     }
