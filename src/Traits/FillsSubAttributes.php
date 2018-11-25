@@ -131,7 +131,7 @@ trait FillsSubAttributes
         return [
             'resource' => $this->resourceName,
             'resourceId' => $data[self::ID] ?? null,
-            'shouldRemoveAny' => $this->request->shouldRemoveAny ?? true,
+            'shouldRemoveAny' => RequestFacade::instance()->shouldRemoveAny ?? true,
             'currentIndex' => $index,
             'parentIndex' => $this->request->currentIndex ?? null,
             self::ATTRIBUTE => $this->attribute($attribute, $index),
