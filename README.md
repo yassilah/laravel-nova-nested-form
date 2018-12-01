@@ -48,20 +48,6 @@ Also, translations are now available in your nested field! You just need to add 
 composer require yassi/nova-nested-form
 ```
 
-# <<<<<<< HEAD
-
-Then add the NestedFormTrait to your App\Nova\Resource class.
-
-```php
-use Yassi\NestedForm\Traits\NestedFormTrait;
-
-abstract class Resource extends NovaResource
-{
-    use NestedFormTrait;
-```
-
-> > > > > > > a7cd4f999a93f1ac82254d51c1bd2e33c60d66b6
-
 # Attach a new relationship form to a resource
 
 Simply add a NestedForm into your fields. The first parameter must be an existing NovaResource class and the second parameter (optional) must be an existing HasOneOrMany relationship in your model.
