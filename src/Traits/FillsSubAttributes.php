@@ -3,10 +3,10 @@
 namespace Yassi\NestedForm\Traits;
 
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Request as RequestFacade;
 use Illuminate\Validation\ValidationException;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
 use Laravel\Nova\Http\Controllers\ResourceStoreController;
@@ -28,9 +28,9 @@ trait FillsSubAttributes
      * either created or updated during the
      * process.
      *
-     * @var array
+     * @var Collection
      */
-    protected $touched = [];
+    protected $touched;
 
     /**
      * Indicates whether all children
@@ -58,9 +58,7 @@ trait FillsSubAttributes
                 unset($this->beforeFillCallback);
             }
 
-            $this->setRequest($request)
-                ->runNestedOperations($request, $attribute, $model)
-                ->removeUntouched($model);
+            $this->setRequest($request)->runNestedOperations($request, $attribute, $model)->removeUntouched($model);
 
             if (isset($this->afterFillCallback)) {
                 call_user_func($this->afterFillCallback, $request, $model, $attribute, $requestAttribute, $this->touched);
@@ -131,7 +129,6 @@ trait FillsSubAttributes
         return [
             'resource' => $this->resourceName,
             'resourceId' => $data[self::ID] ?? null,
-            'shouldRemoveAny' => RequestFacade::instance()->shouldRemoveAny ?? true,
             'currentIndex' => $index,
             'parentIndex' => $this->request->currentIndex ?? null,
             self::ATTRIBUTE => $this->attribute($attribute, $index),
@@ -198,6 +195,7 @@ trait FillsSubAttributes
     protected function runNestedOperations(NovaRequest $request, string $attribute, Model $model)
     {
         $data = $request->{$attribute} ?? null;
+        $this->touched = $this->touched ?? new Collection([]);
 
         if (is_object($data) || is_array($data)) {
             foreach ($data as $index => $value) {
@@ -212,9 +210,7 @@ trait FillsSubAttributes
                     abort($value->getStatusCode());
                 }
 
-                $this->touched[] = $value;
-
-                $this->setNewRequestValue($value);
+                $this->touched->push($value);
             }
         } else {
             $this->shouldRemoveAll = true;
@@ -274,12 +270,12 @@ trait FillsSubAttributes
      */
     protected function removeUntouched(Model $model)
     {
-        if ($this->request->shouldRemoveAny && (count($this->touched) > 0 || $this->shouldRemoveAll)) {
+        if ($this->touched->count() > 0 || $this->shouldRemoveAll) {
 
             if ($this->shouldRemoveAll) {
                 $ids = $model->{$this->viaRelationship}()->pluck('id');
             } else {
-                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', array_column($this->touched, 'id'))->pluck('id');
+                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', $this->touched->pluck('id'))->pluck('id');
             }
 
             $request = DeleteResourceRequest::createFrom($this->request)->replace(['resources' => $ids]);
@@ -290,23 +286,6 @@ trait FillsSubAttributes
 
             $controller->handle($request);
         }
-
-        return $this;
-    }
-
-    /**
-     * Add newly created/updated data to the general request instance.
-     *
-     * @param mixed $value
-     * @return self
-     */
-    protected function setNewRequestValue($value)
-    {
-        $all = RequestFacade::instance()->all();
-        $path = preg_replace('/\[(.*?)\]/', '.$1', $this->request->{self::ATTRIBUTE});
-        $merged = array_merge($value->toArray(), data_get($all, $path));
-        data_set($all, $path, $merged);
-        RequestFacade::instance()->replace($all);
 
         return $this;
     }

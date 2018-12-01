@@ -2,52 +2,56 @@
 
 This package allows you to include your nested relationships' forms into a parent form.
 
-# Important changes in 1.0.4
+# Release note for 2.0.0
+- [x] Max number of children
+- [x] Min number of children
+- [x] Set default open/collapse behavior
+- [x] Set heading template
+- [x] Set separator
+- [x] **NEW** No need for trait anymore
+- [x] **NEW** Auto detection of parent ID field
+- [x] **NEW** Catching UpdatedSinceLastRetrieval exception (even for children)
+- [x] **NEW** AfterFillCallback
+- [x] **NEW** BeforeFillCallback
+- [x] **NEW** Updated design for empty relationship
+
+# Important changes since 1.0.4
 
 To be more consistent with Nova's other fields, the order of the parameters has changed to become:
 
-```
-NestedForm::make($name, $viaRelationship = null, $class = null)
+```php
+NestedForm::make($name, $viaRelationship = null, $class = null),
 ```
 
 For instance, this:
 
-```
-NestedForm::make('Posts')
+```php
+NestedForm::make('Posts'),
 ```
 
 Is now the same as:
 
-```
-NestedForm::make('Posts', 'posts', Post::class)
+```php
+NestedForm::make('Posts', 'posts', Post::class),
 ```
 
 Also, translations are now available in your nested field! You just need to add this key in you language file:
-```
+
+```json
 "Add a new :resourceSingularName": "Ajouter un(e) :resourceSingularName"
 ```
 
 # Installation
 
-```
+```bash
 composer require yassi/nova-nested-form
-```
-
-Then add the NestedFormTrait to your App\Nova\Resource class.
-
-```
-use Yassi\NestedForm\Traits\NestedFormTrait;
-
-abstract class Resource extends NovaResource
-{
-    use NestedFormTrait;
 ```
 
 # Attach a new relationship form to a resource
 
 Simply add a NestedForm into your fields. The first parameter must be an existing NovaResource class and the second parameter (optional) must be an existing HasOneOrMany relationship in your model.
 
-<pre>
+```php
 namespace App\Nova;
 
 use Laravel\Nova\Fields\ID;
@@ -55,7 +59,8 @@ use Illuminate\Http\Request;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\Password;
-<b>use Yassi\NestedForm\NestedForm;</b>
+// Add use statement here.
+use Yassi\NestedForm\NestedForm;
 
 class User extends Resource
 {
@@ -81,50 +86,74 @@ class User extends Resource
                 ->onlyOnForms()
                 ->creationRules('required', 'string', 'min:6')
                 ->updateRules('nullable', 'string', 'min:6'),
-
-            <b>NestedForm::make('Posts')</b>
+                
+            // Add NestedForm here.
+            NestedForm::make('Posts'),
         ];
     }
-</pre>
+```
 
 You can also nest your relationship forms by adding another NestedForm into the fields of your App\Nova\Post.
 
-# NEW: Add a minimum or a maximum number of children
+# NEW: Add a callback before and/or after your relationships have been updated
+
+For instance, if you have to modify a value on the request before the nested form is filled or
+trigger an event after all relations have been set, you can now simply use this:
+
+```php
+NestedForm::make('Posts')
+->beforeFill(function ($request, $model, $attribute, $requestAttribute) {
+    $request->merge(['key' => 'value']);
+    // or
+    if (!$model->hasSomeProperty) {
+        throw new \Exception('You cannot do this.');
+    }
+})
+->afterFill(function ($request, $model, $attribute, $requestAttribute, $touched) {
+    $touched->each(function ($model) {
+        if ($model->wasRecentlyCreated) {
+            // do something
+        }
+    });
+})
+```
+
+# Add a minimum or a maximum number of children
 
 For instance, if you want every user to have at least 3 posts and at most 5 posts, simply use:
 
-```
-NestedForm::make('Posts')->min(3)->max(5)
+```php
+NestedForm::make('Posts')->min(3)->max(5),
 ```
 
 When creating a new user, 3 blank posts will be displayed. If you reach the maximum number of posts, the "Add a new post" button will disappear.
 
-# NEW: Set the default open/collapse behavior
+# Set the default open/collapse behavior
 
 If you want the nested forms to be opened by default, simply use:
 
-```
-NestedForm::make('Posts')->open(true)
+```php
+NestedForm::make('Posts')->open(true),
 ```
 
 You can also decide to open only the first nested form by using:
 
-```
-NestedForm::make('Posts')->open('only first')
+```php
+NestedForm::make('Posts')->open('only first'),
 ```
 
 # Modify the default heading
 
 You can modify the default heading using the heading() method. You can use wildcards to add dynamic content to your label such as '{{id}}', '{{index}}' or any attribute present in the form.
 
-```
-NestedForm::make('Posts')->heading('{{index}} // Post - {{title}}')
+```php
+NestedForm::make('Posts')->heading('{{index}} // Post - {{title}}'),
 ```
 
 # Modify the index separator
 
 You can modify the default index separator using the separator() method when you have nested forms (e.g. 1. Post, 1.1. Comment, 1.1.1. Like).
 
-```
-NestedForm::make('Posts')->separator('\')
+```php
+NestedForm::make('Posts')->separator('\'),
 ```
