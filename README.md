@@ -47,6 +47,19 @@ Also, translations are now available in your nested field! You just need to add 
 composer require yassi/nova-nested-form
 ```
 
+<<<<<<< HEAD
+=======
+Then add the NestedFormTrait to your App\Nova\Resource class.
+
+```php
+use Yassi\NestedForm\Traits\NestedFormTrait;
+
+abstract class Resource extends NovaResource
+{
+    use NestedFormTrait;
+```
+
+>>>>>>> a7cd4f999a93f1ac82254d51c1bd2e33c60d66b6
 # Attach a new relationship form to a resource
 
 Simply add a NestedForm into your fields. The first parameter must be an existing NovaResource class and the second parameter (optional) must be an existing HasOneOrMany relationship in your model.
@@ -101,6 +114,7 @@ For instance, if you have to modify a value on the request before the nested for
 trigger an event after all relations have been set, you can now simply use this:
 
 ```php
+<<<<<<< HEAD
 NestedForm::make('Posts')
 ->beforeFill(function ($request, $model, $attribute, $requestAttribute) {
     $request->merge(['key' => 'value']);
@@ -123,6 +137,8 @@ NestedForm::make('Posts')
 For instance, if you want every user to have at least 3 posts and at most 5 posts, simply use:
 
 ```php
+=======
+>>>>>>> a7cd4f999a93f1ac82254d51c1bd2e33c60d66b6
 NestedForm::make('Posts')->min(3)->max(5),
 ```
 
