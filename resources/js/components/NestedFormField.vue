@@ -39,7 +39,7 @@
                :via-resource-id="field.viaResourceId"
                :via-relationship="field.viaRelationship"
                :is="`form-${getComponent(subfield)}`"
-               v-show="subfield.component === 'nested-form' || child.opened" />
+               v-show="subfield.opened" />
     <!-- ACTUAL FIELDS -->
 
     <!-- DELETION MODAL -->
