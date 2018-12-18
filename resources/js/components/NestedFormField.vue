@@ -21,33 +21,34 @@
       </div>
     </div>
     <!-- HEADING -->
+    <div v-show="child.opened">
 
-    <!-- ERROR ON ATTACHED RESOURCE -->
-    <help-text class="error-text text-danger text-center m-4"
-               v-if="hasError">
-      {{ firstError }}
-    </help-text>
-    <!-- ERROR ON ATTACHED RESOURCE -->
+      <!-- ERROR ON ATTACHED RESOURCE -->
+      <help-text class="error-text text-danger text-center m-4"
+                 v-if="hasError">
+        {{ firstError }}
+      </help-text>
+      <!-- ERROR ON ATTACHED RESOURCE -->
 
-    <!-- ACTUAL FIELDS -->
-    <component v-for="subfield in child.fields"
-               :field="subfield"
-               :key="subfield.attribute"
-               :errors="errors"
-               :resource-name="field.resourceName"
-               :via-resource="field.viaResource"
-               :via-resource-id="field.viaResourceId"
-               :via-relationship="field.viaRelationship"
-               :is="`form-${getComponent(subfield)}`"
-               v-show="subfield.opened" />
-    <!-- ACTUAL FIELDS -->
+      <!-- ACTUAL FIELDS -->
+      <component v-for="subfield in child.fields"
+                 :field="subfield"
+                 :key="subfield.attribute"
+                 :errors="errors"
+                 :resource-name="field.resourceName"
+                 :via-resource="field.viaResource"
+                 :via-resource-id="field.viaResourceId"
+                 :via-relationship="field.viaRelationship"
+                 :is="`form-${getComponent(subfield)}`" />
+      <!-- ACTUAL FIELDS -->
 
-    <!-- DELETION MODAL -->
-    <DeleteModal :resourceSingularName="field.singularLabel"
-                 @submit="remove"
-                 @close="showDeleteModal = false"
-                 v-if="showDeleteModal" />
-    <!-- DELETION MODAL -->
+      <!-- DELETION MODAL -->
+      <DeleteModal :resourceSingularName="field.singularLabel"
+                   @submit="remove"
+                   @close="showDeleteModal = false"
+                   v-if="showDeleteModal" />
+      <!-- DELETION MODAL -->
+    </div>
 
   </div>
 </template>
