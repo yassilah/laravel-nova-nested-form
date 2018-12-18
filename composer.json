@@ -12,6 +12,10 @@
     "require": {
         "php": ">=7.1.0"
     },
+    "repositories": [{
+        "type": "composer",
+        "url": "https://nova.laravel.com"
+    }],
     "autoload": {
         "psr-4": {
             "Yassi\\NestedForm\\": "src/"
@@ -28,5 +32,8 @@
         "sort-packages": true
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "require-dev": {
+        "laravel/nova": "^1.2"
+    }
 }
