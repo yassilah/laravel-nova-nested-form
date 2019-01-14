@@ -187,7 +187,7 @@ trait FillsSubAttributes
             }
         }
 
-        return $attribute . (isset($this->meta['has_many']) ? '[' . $index . ']' : '');
+        return $attribute . ((isset($this->meta['has_many']) || isset($this->meta['morph_many'])) ? '[' . $index . ']' : '');
     }
 
     /**
