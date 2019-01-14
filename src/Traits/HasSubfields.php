@@ -5,6 +5,8 @@ namespace Yassi\NestedForm\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Contracts\ListableField;
 use Laravel\Nova\ResourceToolElement;
+use Laravel\Nova\Fields\MorphTo;
+use Laravel\Nova\Fields\MorphToMany;
 
 trait HasSubfields
 {
@@ -32,7 +34,7 @@ trait HasSubfields
      */
     public function getFields(string $filterKey, Model $model = null, $index = self::INDEX)
     {
-        return $this->filteredFieds($filterKey)->map(function ($field) use ($index, $model) {
+        return $this->filteredFields($filterKey)->map(function ($field) use ($index, $model) {
             $field->withMeta([
                 'original_attribute' => $field->attribute,
                 'attribute' => ($this->meta['attribute'] ?? $this->attribute) . '[' . $index . '][' . $field->attribute . ']',
@@ -55,7 +57,7 @@ trait HasSubfields
      * @param string $filterKey
      * @return FieldCollection
      */
-    protected function filteredFieds(string $filterKey)
+    protected function filteredFields(string $filterKey)
     {
         return $this->resourceInstance->availableFields($this->request)->reject(function ($field) use ($filterKey) {
             return $field instanceof ListableField ||
@@ -63,7 +65,8 @@ trait HasSubfields
             $field->attribute === $this->resourceInstance::newModel()->getKeyName() ||
             $field->attribute === 'ComputedField' ||
             !$field->$filterKey ||
-                (isset($field->resourceName) && ($field->resourceName === $this->meta['viaResource']) && $this->setInverseRelationship($field->attribute));
+                (isset($field->resourceName) && ($field->resourceName === $this->meta['viaResource']) && $this->setInverseRelationship($field->attribute)) ||
+                ($this->request->getMethod() === 'GET' && ($field instanceof MorphTo || $field instanceof MorphToMany));
         });
     }
 

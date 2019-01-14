@@ -157,6 +157,13 @@ trait FillsSubAttributes
             $data[$this->inverseRelationship] = $model->id;
         }
 
+        if (isset($this->meta['morph_many']) || isset($this->meta['morph_one'])) {
+            $relationship = $model->{$this->viaRelationship}();
+            $key = head(explode('_type', $relationship->getMorphType()));
+            $data[$relationship->getMorphType()] = $this->meta['viaResource'];
+            $data[$key] = $model->{$relationship->getLocalKeyName()};
+        }
+
         return $data;
     }
 
@@ -199,6 +206,7 @@ trait FillsSubAttributes
 
         if (is_object($data) || is_array($data)) {
             foreach ($data as $index => $value) {
+
                 if (!is_int($index)) {
                     $value = $request->{$attribute};
                     break;
