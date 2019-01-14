@@ -1,3 +1,11 @@
+
+[![Latest Stable Version](https://poser.pugx.org/yassi/nova-nested-form/v/stable)](https://packagist.org/packages/yassi/nova-nested-form)
+[![Total Downloads](https://poser.pugx.org/yassi/nova-nested-form/downloads)](https://packagist.org/packages/yassi/nova-nested-form)
+[![Latest Unstable Version](https://poser.pugx.org/yassi/nova-nested-form/v/unstable)](https://packagist.org/packages/yassi/nova-nested-form)
+[![License](https://poser.pugx.org/yassi/nova-nested-form/license)](https://packagist.org/packages/yassi/nova-nested-form)
+[![Monthly Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/monthly)](https://packagist.org/packages/yassi/nova-nested-form)
+[![Daily Downloads](https://poser.pugx.org/yassi/nova-nested-form/d/daily)](https://packagist.org/packages/yassi/nova-nested-form)
+
 # Nova Nested Form
 
 This package allows you to include your nested relationships' forms into a parent form.
