@@ -62,7 +62,7 @@ trait HasHeading
      */
     protected function defaultHeading()
     {
-        return (isset($this->meta['has_many']) ? self::INDEX . $this->separator . ' ' : ' ') . Str::singular($this->name);
+        return ($this->isManyRelationship() ? self::INDEX . $this->separator . ' ' : ' ') . Str::singular($this->name);
     }
 
     /**

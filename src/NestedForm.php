@@ -254,4 +254,14 @@ class NestedForm extends Field
 
         return $this;
     }
+
+    /**
+     * Checks whether the current relationship has many children.
+     *
+     * @return bool
+     */
+    protected function isManyRelationship()
+    {
+        return isset($this->meta['has_many']) || isset($this->meta['morph_many']);
+    }
 }
