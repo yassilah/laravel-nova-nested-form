@@ -42,13 +42,14 @@
                  :is="`form-${getComponent(subfield)}`" />
       <!-- ACTUAL FIELDS -->
 
-      <!-- DELETION MODAL -->
-      <DeleteModal :resourceSingularName="field.singularLabel"
-                   @submit="remove"
-                   @close="showDeleteModal = false"
-                   v-if="showDeleteModal" />
-      <!-- DELETION MODAL -->
     </div>
+
+    <!-- DELETION MODAL -->
+    <DeleteModal :resourceSingularName="field.singularLabel"
+                 @submit="remove"
+                 @close="showDeleteModal = false"
+                 v-if="showDeleteModal" />
+    <!-- DELETION MODAL -->
 
   </div>
 </template>
@@ -121,7 +122,7 @@ export default {
 
   methods: {
     /**
-     * This toggles the visibility of the 
+     * This toggles the visibility of the
      * content of the related resource
      */
     toggleVisibility() {
