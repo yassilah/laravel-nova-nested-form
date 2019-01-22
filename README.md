@@ -17,12 +17,14 @@ This package allows you to include your nested relationships' forms into a paren
 - [x] Set default open/collapse behavior
 - [x] Set heading template
 - [x] Set separator
-- [x] **NEW** No need for trait anymore
-- [x] **NEW** Auto detection of parent ID field
-- [x] **NEW** Catching UpdatedSinceLastRetrieval exception (even for children)
-- [x] **NEW** AfterFillCallback
-- [x] **NEW** BeforeFillCallback
-- [x] **NEW** Updated design for empty relationship
+- [x] No need for trait anymore
+- [x] Auto detection of parent ID field
+- [x] Catching UpdatedSinceLastRetrieval exception (even for children)
+- [x] AfterFillCallback
+- [x] BeforeFillCallback
+- [x] Updated design for empty relationship
+- [ ] **COMING** Conditional nested forms
+- [ ] **COMING** Updated design for single field nested form
 
 # Important changes since 1.0.4
 
