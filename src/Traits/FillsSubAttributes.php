@@ -30,7 +30,7 @@ trait FillsSubAttributes
      *
      * @var Collection
      */
-    protected $touched;
+    protected $touched = [];
 
     /**
      * Indicates whether all children
@@ -202,7 +202,6 @@ trait FillsSubAttributes
     protected function runNestedOperations(NovaRequest $request, string $attribute, Model $model)
     {
         $data = $request->{$attribute} ?? null;
-        $this->touched = $this->touched ?? new Collection([]);
 
         if (is_object($data) || is_array($data)) {
             foreach ($data as $index => $value) {
@@ -210,16 +209,6 @@ trait FillsSubAttributes
                 if (!is_int($index)) {
                     $value = $request->{$attribute};
                     $index = null;
-
-                    $this->runNestedOperation($value, $model, $attribute, $index, $request);
-
-                    if ($value instanceof Response) {
-                        abort($value->getStatusCode());
-                    }
-
-                    $this->touched->push($value);
-
-                    break;
                 }
 
                 $this->runNestedOperation($value, $model, $attribute, $index, $request);
@@ -228,7 +217,11 @@ trait FillsSubAttributes
                     abort($value->getStatusCode());
                 }
 
-                $this->touched->push($value);
+                $this->touched[] = $value->getData()->id;
+
+                if (is_null($index)) {
+                    break;
+                }
             }
         } else {
             $this->shouldRemoveAll = true;
@@ -288,15 +281,16 @@ trait FillsSubAttributes
      */
     protected function removeUntouched(Model $model)
     {
-        if ($this->touched->count() > 0 || $this->shouldRemoveAll) {
+
+        if (count($this->touched) > 0 || $this->shouldRemoveAll) {
 
             if ($this->shouldRemoveAll) {
                 $ids = $model->{$this->viaRelationship}()->pluck('id');
             } else {
-                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', $this->touched->pluck('id'))->pluck('id');
+                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', $this->touched)->pluck('id');
             }
 
-            $request = DeleteResourceRequest::createFrom($this->request)->replace(['resources' => $ids]);
+            $request = DeleteResourceRequest::createFrom($this->request->replace(['resources' => $ids]));
 
             $request->query = new ParameterBag(['resource' => $this->resourceName]);
 
