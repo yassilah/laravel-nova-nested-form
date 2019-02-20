@@ -4,9 +4,9 @@ namespace Yassi\NestedForm\Traits;
 
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Nova\Contracts\ListableField;
-use Laravel\Nova\ResourceToolElement;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\ResourceToolElement;
 
 trait HasSubfields
 {
@@ -37,7 +37,7 @@ trait HasSubfields
         return $this->filteredFields($filterKey)->map(function ($field) use ($index, $model) {
             $field->withMeta([
                 'original_attribute' => $field->attribute,
-                'attribute' => ($this->meta['attribute'] ?? $this->attribute) . '[' . $index . '][' . $field->attribute . ']',
+                'attribute' => ($this->meta['attribute'] ?? $this->attribute) . ($this->isManyRelationship() ? '[' . $index . ']' : '') . '[' . $field->attribute . ']',
             ]);
 
             if ($field->component === $this->component) {

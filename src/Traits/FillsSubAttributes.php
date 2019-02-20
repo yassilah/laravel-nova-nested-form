@@ -209,7 +209,7 @@ trait FillsSubAttributes
 
                 if (!is_int($index)) {
                     $value = $request->{$attribute};
-                    break;
+                    $index = null;
                 }
 
                 $this->runNestedOperation($value, $model, $attribute, $index, $request);
