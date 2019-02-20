@@ -210,6 +210,16 @@ trait FillsSubAttributes
                 if (!is_int($index)) {
                     $value = $request->{$attribute};
                     $index = null;
+
+                    $this->runNestedOperation($value, $model, $attribute, $index, $request);
+
+                    if ($value instanceof Response) {
+                        abort($value->getStatusCode());
+                    }
+
+                    $this->touched->push($value);
+
+                    break;
                 }
 
                 $this->runNestedOperation($value, $model, $attribute, $index, $request);
