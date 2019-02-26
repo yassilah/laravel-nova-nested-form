@@ -4,23 +4,19 @@ namespace Yassi\NestedForm;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Request as RequestFacade;
 use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Fields\ResourceRelationshipGuesser;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
-use Yassi\NestedForm\Traits\CanBeCollapsed;
-use Yassi\NestedForm\Traits\FillsSubAttributes;
-use Yassi\NestedForm\Traits\HasChildren;
 use Yassi\NestedForm\Traits\HasHeading;
-use Yassi\NestedForm\Traits\HasLimits;
-use Yassi\NestedForm\Traits\HasSchema;
-use Yassi\NestedForm\Traits\HasSubfields;
 
 class NestedForm extends Field
 {
-    use HasChildren, HasSchema, HasSubfields, HasLimits, HasHeading, CanBeCollapsed, FillsSubAttributes;
+    use HasHeading;
 
     /**
      * Constants for placeholders.
@@ -37,18 +33,11 @@ class NestedForm extends Field
     public $component = 'nested-form';
 
     /**
-     * The class of the related resource.
+     * The class name of the related resource.
      *
      * @var string
      */
     public $resourceClass;
-
-    /**
-     * The instance of the related resource.
-     *
-     * @var string
-     */
-    public $resourceInstance;
 
     /**
      * The URI key of the related resource.
@@ -58,6 +47,27 @@ class NestedForm extends Field
     public $resourceName;
 
     /**
+     * The class name of the parent resource.
+     *
+     * @var string
+     */
+    public $parentResourceClass;
+
+    /**
+     * The URI key of the parent resource.
+     *
+     * @var string
+     */
+    public $parentResourceName;
+
+    /**
+     * The name of the Eloquent "has many" relationship.
+     *
+     * @var string
+     */
+    public $relationship;
+
+    /**
      * The displayable singular label of the relation.
      *
      * @var string
@@ -65,53 +75,9 @@ class NestedForm extends Field
     public $singularLabel;
 
     /**
-     * The name of the Eloquent relationship.
-     *
-     * @var string
-     */
-    public $viaRelationship;
-
-    /**
-     * The type of the Eloquent relationship.
-     *
-     * @var string
-     */
-    public $relationType;
-
-    /**
-     * The current request instance.
-     *
-     * @var NovaRequest
+     * The original request.
      */
     protected $request;
-
-    /**
-     * Indicates if the element should be shown on the index view.
-     *
-     * @var bool
-     */
-    public $showOnIndex = false;
-
-    /**
-     * Indicates if the element should be shown on the detail view.
-     *
-     * @var bool
-     */
-    public $showOnDetail = false;
-
-    /**
-     * Registered after callback.
-     *
-     * @var array
-     */
-    public $afterFillCallback;
-
-    /**
-     * Registered before callback.
-     *
-     * @var array
-     */
-    public $beforeFillCallback;
 
     /**
      * Create a new field.
@@ -121,17 +87,15 @@ class NestedForm extends Field
      * @param  string|null  $resource
      * @return void
      */
-    public function __construct(string $name, $attribute = null, $resource = null)
+    public function __construct($name, $attribute = null, $resource = null)
     {
         parent::__construct($name, $attribute);
 
         $resource = $resource ?? ResourceRelationshipGuesser::guessResource($name);
 
         $this->resourceClass = $resource;
-        $this->resourceInstance = new $resource($resource::newModel());
         $this->resourceName = $resource::uriKey();
-        $this->viaRelationship = $this->attribute;
-        $this->setRequest();
+        $this->relationship = $this->attribute;
     }
 
     /**
@@ -142,126 +106,260 @@ class NestedForm extends Field
      */
     public function authorize(Request $request)
     {
-        return call_user_func([$this->resourceClass, 'authorizedToViewAny'], $request) && parent::authorize($request);
+        return call_user_func(
+            [$this->resourceClass, 'authorizedToViewAny'], $request
+        ) && parent::authorize($request);
     }
 
     /**
-     * Register a global callback or a callback for
-     * specific attributes (children) after it has been filled.
+     * Resolve the field's value.
      *
-     * @param callable $callback
-     *
-     * @return self
-     */
-    public function afterFill(callable $callback)
-    {
-        $this->afterFillCallback = $callback;
-
-        return $this;
-    }
-
-    /**
-     * Register a global callback or a callback for
-     * specific attributes (children) before it has been filled.
-     *
-     * @param callable $callback
-     *
-     * @return self
-     */
-    public function beforeFill(callable $callback)
-    {
-        $this->beforeFillCallback = $callback;
-
-        return $this;
-    }
-
-    /**
-     * Resolve the form fields.
-     *
-     * @param $resource
-     * @param $attribute
-     *
+     * @param  mixed  $resource
+     * @param  string|null  $attribute
      * @return void
      */
     public function resolve($resource, $attribute = null)
     {
-        $this->setRelationType($resource)->setViaResourceInformation($resource)->setSchema()->setChildren($resource);
+
+        return $this->withMeta([
+            'children' => $this->getChildren($resource),
+            'schema' => $this->getSchema($resource),
+        ]);
     }
 
     /**
-     * Guess the type of relationship for the nested form.
+     * Get children.
+     *
+     * @param mixed $resource
+     * @return array
+     */
+    protected function getChildren($resource)
+    {
+        return $resource->{$this->relationship}()->get()->map(function ($model, $index) {
+            return (object) [
+                'heading' => $this->getHeadingForIndex($index),
+                'fields' => $this->getNestedResourcesFields($model, $index),
+            ];
+        });
+    }
+
+    /**
+     * Get schema.
+     *
+     * @param mixed $resource
+     * @return array
+     */
+    protected function getSchema($resource)
+    {
+        return (object) [
+            'fields' => $this->getCreationFields($resource),
+        ];
+    }
+
+    /**
+     * Get nested resources' fields.
+     *
+     * @param Model $model
+     * @param int $index
+     * @return FieldCollection
+     */
+    protected function getNestedResourcesFields($model, $index)
+    {
+        return $this->setNestedHeadings(
+            $this->setNestedAttributes(
+                $this->setNestedRequests($model, $this->getUpdateFields($model)),
+                $index),
+            $index)->each->resolve($model);
+    }
+
+    /**
+     * Get the creation schema for nested children.
+     *
+     * @param mixed $resource
+     * @return FieldCollection
+     */
+    protected function getCreationSchema($resource)
+    {
+        return $this->getCreationFields($resource->{$this->relationship}()->getModel());
+    }
+
+    /**
+     * Get the list of update fields for the given nested model.
+     *
+     * @param Model $model
+     * @return FieldCollection
+     */
+    protected function getUpdateFields(Model $model)
+    {
+        return collect(Nova::newResourceFromModel($model)->fields($this->getRequest()));
+    }
+
+    /**
+     * Set requests to children NestedForms.
+     *
+     * @param Model $model
+     * @param Collection $fields
+     * @return $fields
+     */
+    protected function setNestedRequests(Model $model, Collection $fields)
+    {
+        return $fields->map(function ($field) use ($model) {
+            return $field instanceof NestedForm ? $field->setRequest($model) : $field;
+        });
+    }
+
+    /**
+     * Set the new nested attribute value to each child's fields.
+     *
+     * @param Collection $fields
+     * @return Collection
+     */
+    protected function setNestedAttributes(Collection $fields, int $index = null)
+    {
+        return $fields->map(function ($field) use ($index) {
+            return $field->withMeta([
+                'originalAttribute' => $field->attribute,
+                'attribute' => $this->getNestedAttribute() . ($this->isManyRelationship() ? '[' . $index . ']' : '') . '[' . $field->attribute . ']',
+            ]);
+        });
+    }
+
+    /**
+     * Set the new nested heading to children NestedForms.
+     *
+     * @param Collection $fields
+     * @return Collection
+     */
+    protected function setNestedHeadings(Collection $fields, int $index = null)
+    {
+        return $fields->map(function ($field) use ($index) {
+            if ($field instanceof NestedForm) {
+                $field->prefix = $this->prefix . (is_int($index) ? $index + 1 : $index) . $field->separator;
+            }
+
+            return $field;
+        });
+    }
+
+    /**
+     * Get the list of creation fields for the given nested model.
+     *
+     * @param Model $model
+     * @return \Laravel\Nova\Fields\FieldCollection
+     */
+    protected function getCreationFields(Model $model)
+    {
+        return collect(Nova::newResourceFromModel($model)->fields($this->getRequest()));
+    }
+
+    /**
+     * Get the nested field attribute.
      *
      * @return string
      */
-    protected function setRelationType(Model $resource)
+    public function getNestedAttribute()
     {
-        if (!method_exists($resource, $this->viaRelationship)) {
-            throw new \Exception('The relation "' . $this->viaRelationship . '" does not exist on resource ' . get_class($resource) . '.');
-        }
+        return $this->meta['attribute'] ?? $this->attribute;
+    }
 
+    /**
+     * Get the relationship type.
+     *
+     * @return string
+     */
+    public function getRelationshipType()
+    {
+        return (new \ReflectionClass(Nova::modelInstanceForKey($this->getRequest()->resource)->{$this->relationship}()))->getShortName();
+    }
+
+    /**
+     * Add the relationship type to the meta.
+     *
+     * @return string
+     */
+    public function addRelationshipType()
+    {
         return $this->withMeta([
-            Str::snake((new \ReflectionClass($resource->{$this->viaRelationship}()))->getShortName()) => true,
+            Str::snake($this->getRelationshipType()) => true,
         ]);
     }
 
     /**
-     * Set the viaResource information as meta.
+     * Add the relationship type to the meta.
      *
-     * @param Model $resource
-     *
-     * @return self
+     * @return string
      */
-    protected function setViaResourceInformation(Model $resource)
+    public function addIsManyRelationship()
     {
         return $this->withMeta([
-            'viaResource' => Nova::resourceForModel($resource)::uriKey(),
-            'viaResourceId' => $resource->id,
+            'is_many' => $this->isManyRelationship(),
         ]);
     }
 
     /**
-     * Prepare the field for JSON serialization.
+     * Check whether the current relationship is
+     * a Many or One relationship.
      *
-     * @return array
+     * @return bool
      */
-    public function jsonSerialize()
+    public function isManyRelationship()
     {
-        return array_merge([
-            'component' => $this->component,
-            'prefixComponent' => true,
-            'resourceName' => $this->resourceName,
-            'viaRelationship' => $this->viaRelationship,
-            'listable' => true,
-            'singularLabel' => Str::singular($this->name),
-            'pluralLabel' => Str::plural($this->name),
-            'name' => $this->name,
-            'attribute' => $this->attribute,
-            'INDEX' => self::INDEX,
-            'ATTRIBUTE' => self::ATTRIBUTE,
-            'ID' => self::ID,
-        ], $this->meta());
+        return str_contains($this->getRelationshipType(), 'Many');
     }
 
     /**
-     * Set the current request instance.
+     * Get the current request.
      *
-     * @param Request $request
+     * @return NovaRequest
+     */
+    public function getRequest()
+    {
+        return $this->request ?? NovaRequest::createFrom(RequestFacade::instance());
+    }
+
+    /**
+     * Set the current request.
+     *
+     * @param Model $model
      * @return self
      */
-    protected function setRequest(Request $request = null)
+    public function setRequest(Model $model)
     {
-        $this->request = $request ?? NovaRequest::createFrom(RequestFacade::instance());
+        $oldRequest = $this->getRequest();
+
+        $newRequest = NovaRequest::create(null, null, [
+            'resource' => Nova::resourceForModel($model)::uriKey(),
+            'id' => $model->id ?? null,
+        ]);
+
+        $this->request = NovaRequest::createFrom($newRequest, $oldRequest);
 
         return $this;
     }
 
     /**
-     * Checks whether the current relationship has many children.
+     * Set the displayable singular label of the resource.
      *
-     * @return bool
+     * @return string
      */
-    protected function isManyRelationship()
+    public function singularLabel($singularLabel)
     {
-        return isset($this->meta['has_many']) || isset($this->meta['morph_many']);
+        $this->singularLabel = $singularLabel;
+
+        return $this;
+    }
+
+    /**
+     * Get additional meta information to merge with the field payload.
+     *
+     * @return array
+     */
+    public function meta()
+    {
+        return array_merge([
+            'resourceName' => $this->resourceName,
+            'relationship' => $this->relationship,
+            'singularLabel' => $this->singularLabel ?? Str::singular($this->name),
+        ], $this->meta);
     }
 }

@@ -10,7 +10,8 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=7.1.0"
+        "php": ">=7.1.0",
+        "laravel/nova": "*"
     },
     "repositories": [{
         "type": "composer",
@@ -19,6 +20,11 @@
     "autoload": {
         "psr-4": {
             "Yassi\\NestedForm\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yassi\\NestedForm\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -34,6 +40,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
-        "laravel/nova": "^1.2"
+        "laravel/framework": "^5.7",
+        "orchestra/testbench": "^3.7",
+        "phpunit/phpunit": "^7.0.0"
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit"
     }
 }

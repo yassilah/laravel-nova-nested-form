@@ -66,13 +66,23 @@ trait HasHeading
     }
 
     /**
-     * Set heading.
+     * Get heading.
      *
-     * @return self
+     * @return string
      */
-    protected function getHeading()
+    public function getHeading()
     {
         return trim($this->prefix . ($this->heading ?? $this->defaultHeading()));
+    }
+
+    /**
+     * Get heading for a given index.
+     *
+     * @return string
+     */
+    public function getHeadingForIndex(int $index = null)
+    {
+        return str_replace(self::INDEX, (is_int($index) ? $index + 1 : self::INDEX), $this->getHeading());
     }
 
 }
