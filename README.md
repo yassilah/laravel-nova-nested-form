@@ -10,7 +10,7 @@
 
 This package allows you to include your nested relationships' forms into a parent form.
 
-# Release note for 2.0.0
+# Release note for 2.0.5
 
 - [x] Max number of children
 - [x] Min number of children
@@ -23,6 +23,7 @@ This package allows you to include your nested relationships' forms into a paren
 - [x] AfterFillCallback
 - [x] BeforeFillCallback
 - [x] Updated design for empty relationship
+- [x] Handle file uploads
 - [ ] **COMING** Conditional nested forms
 - [ ] **COMING** Updated design for single field nested form
 
