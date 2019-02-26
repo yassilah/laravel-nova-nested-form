@@ -16,7 +16,8 @@
                          :index="index"
                          :field="field"
                          :child="child"
-                         :errors="errors" />
+                         :errors="errors"
+                         @file-deleted="$emit('file-deleted')" />
       <!-- ACTUAL FIELDS -->
     </template>
 

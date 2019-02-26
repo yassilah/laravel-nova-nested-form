@@ -35,10 +35,14 @@
                  :field="subfield"
                  :key="subfield.attribute"
                  :errors="errors"
+                 :resource-id="child[field.ID]"
                  :resource-name="field.resourceName"
                  :via-resource="field.viaResource"
                  :via-resource-id="field.viaResourceId"
                  :via-relationship="field.viaRelationship"
+                 :related-resource-name="field.relatedResourceName"
+                 :related-resource-id="field.relatedResourceId"
+                 @file-deleted="$emit('file-deleted')"
                  :is="`form-${getComponent(subfield)}`" />
       <!-- ACTUAL FIELDS -->
 
@@ -56,11 +60,12 @@
 
 <script>
 import FormNestedBelongsToField from './CustomNestedFields/BelongsToField'
+import FormNestedFileField from './CustomNestedFields/FileField'
 import DeleteModal from './Modals/Delete'
 
 export default {
 
-  components: { FormNestedBelongsToField, DeleteModal },
+  components: { FormNestedBelongsToField, FormNestedFileField, DeleteModal },
 
 
   props: {
@@ -153,7 +158,7 @@ export default {
      */
     getComponent(field) {
 
-      if (field.component === 'belongs-to-field') {
+      if (['belongs-to-field', 'file-field'].includes(field.component)) {
         return 'nested-' + field.component
       }
 

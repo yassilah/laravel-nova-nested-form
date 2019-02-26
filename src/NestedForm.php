@@ -230,7 +230,6 @@ class NestedForm extends Field
             'component' => $this->component,
             'prefixComponent' => true,
             'resourceName' => $this->resourceName,
-            'viaRelationship' => $this->viaRelationship,
             'listable' => true,
             'singularLabel' => Str::singular($this->name),
             'pluralLabel' => Str::plural($this->name),
