@@ -190,6 +190,8 @@ trait FillsSubAttributes
         return $attribute . ($this->isManyRelationship() ? '[' . $index . ']' : '');
     }
 
+    
+
     /**
      * This method loops through the request data
      * and runs the necessary controller with the right
@@ -211,6 +213,10 @@ trait FillsSubAttributes
                     $index = null;
                 }
 
+                if ($this->containsFile($attribute, $index)) {
+                    $request->files->add($this->getFiles($attribute, $index));
+                }
+
                 $this->runNestedOperation($value, $model, $attribute, $index, $request);
 
                 if ($value instanceof Response) {
@@ -228,6 +234,43 @@ trait FillsSubAttributes
         }
 
         return $this;
+    }
+
+    /**
+     * Check if the nested item contains a file.
+     *
+     * @param  string  $attribute
+     * @param  int  $index
+     * @return bool
+     */
+    protected function containsFile(string $attribute, int $index = null)
+    {
+        if (is_null($index)) {
+            return isset($_FILES[$attribute]);
+        }
+
+        return isset($_FILES[$attribute]) && isset($_FILES[$attribute]['name'][$index]);
+    }
+
+    /**
+     * Change the file attribute to handle the download properly.
+     *
+     * @param  string  $attribute
+     * @param  int  $index
+     * @return array
+     */
+    protected function getFiles(string $attribute, int $index = 0)
+    {
+        $attributes = array_keys($_FILES[$attribute]['name'][$index]);
+        $files = [];
+
+        foreach ($attributes as $newAttribute) {
+            $newName = $_FILES[$attribute]['tmp_name'][$index][$newAttribute];
+            $newPath = $_FILES[$attribute]['tmp_name'][$index][$newAttribute];
+            $files[] = [$newAttribute => new UploadedFile($newPath, $newName)];
+        }
+
+        return $files;
     }
 
     /**
