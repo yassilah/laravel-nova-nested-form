@@ -19,6 +19,7 @@ use Laravel\Nova\Nova;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Yassi\NestedForm\Exceptions\NestedValidationException;
 use Yassi\NestedForm\NestedForm;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 trait FillsSubAttributes
 {
