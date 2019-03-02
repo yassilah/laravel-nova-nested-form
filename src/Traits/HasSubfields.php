@@ -80,7 +80,7 @@ trait HasSubfields
     {
         $this->inverseRelationship = $inverseRelationship;
 
-        $this->inverseRelationshipKey = $this->resourceInstance::newModel()->{$inverseRelationship}()->getForeignKey();
+        $this->inverseRelationshipKey = $this->resourceInstance::newModel()->{$inverseRelationship}()->getForeignKeyName();
 
         return $this;
     }
