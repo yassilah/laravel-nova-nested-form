@@ -14,7 +14,7 @@
         "babel-plugin-transform-vue-jsx": "^3.7.0",
         "cross-env": "^5.0.0",
         "laravel-mix": "^1.0",
-        "laravel-nova": "^1.0",
+        "laravel-nova": "^2.0",
         "vue-clickaway": "^2.2.2"
     },
     "dependencies": {
