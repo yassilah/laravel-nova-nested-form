@@ -20,6 +20,9 @@ use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Yassi\NestedForm\Exceptions\NestedValidationException;
 use Yassi\NestedForm\NestedForm;
+use Yassi\NestedForm\Requests\CustomCreateResourceRequest;
+use Yassi\NestedForm\Requests\CustomUpdateResourceRequest;
+use Yassi\NestedForm\Requests\CustomDeleteResourceRequest;
 
 trait FillsSubAttributes
 {
@@ -87,9 +90,11 @@ trait FillsSubAttributes
     protected function newRequest(array $data, Model $model, string $attribute, int $index = null)
     {
         if (isset($data[self::ID])) {
-            $request = UpdateResourceRequest::createFrom($this->request);
+            $request = CustomUpdateResourceRequest::createFrom($this->request);
+            $request->setCustomResource($this->resourceClass, $data[self::ID]);
         } else {
-            $request = CreateResourceRequest::createFrom($this->request);
+            $request = CustomCreateResourceRequest::createFrom($this->request);
+            $request->setCustomResource($this->resourceClass);
         }
 
         $request->files = new FileBag($this->request->file($attribute)[$index ?? 0] ?? []);
@@ -293,7 +298,8 @@ trait FillsSubAttributes
                 $ids = $model->{$this->viaRelationship}()->whereNotIn('id', $this->touched)->pluck('id');
             }
 
-            $request = DeleteResourceRequest::createFrom($this->request->replace(['resources' => $ids]));
+            $request = CustomDeleteResourceRequest::createFrom($this->request->replace(['resources' => $ids]));
+            $request->setCustomResource($this->resourceClass);
 
             $request->query = new ParameterBag(['resource' => $this->resourceName]);
 
