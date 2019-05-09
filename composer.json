@@ -10,7 +10,8 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=7.1.0"
+        "php": ">=7.1.0",
+        "whitecube/nova-flexible-content": "^0.1.2"
     },
     "repositories": [{
         "type": "composer",
