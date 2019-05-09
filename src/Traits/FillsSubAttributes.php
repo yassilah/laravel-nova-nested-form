@@ -70,7 +70,6 @@ trait FillsSubAttributes
             }
 
             $this->removeCurrentAttribute($request, $attribute);
-
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);

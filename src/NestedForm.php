@@ -263,4 +263,14 @@ class NestedForm extends Field
     {
         return isset($this->meta['has_many']) || isset($this->meta['morph_many']);
     }
+
+    /**
+     * Checks whether the user is using Nova > 2.
+     * 
+     * @return  bool
+     */
+    protected function isUsingNova2()
+    {
+        return Str::startsWith(Nova::version(), '2');
+    }
 }
