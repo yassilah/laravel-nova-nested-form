@@ -5,7 +5,6 @@ namespace Yassi\NestedForm\Traits;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
@@ -15,11 +14,9 @@ use Laravel\Nova\Http\Requests\CreateResourceRequest;
 use Laravel\Nova\Http\Requests\DeleteResourceRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Http\Requests\UpdateResourceRequest;
-use Laravel\Nova\Nova;
 use Symfony\Component\HttpFoundation\FileBag;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Yassi\NestedForm\Exceptions\NestedValidationException;
-use Yassi\NestedForm\NestedForm;
 
 trait FillsSubAttributes
 {
@@ -67,7 +64,6 @@ trait FillsSubAttributes
             }
 
             $this->removeCurrentAttribute($request, $attribute);
-
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);

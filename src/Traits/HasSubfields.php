@@ -7,8 +7,6 @@ use Laravel\Nova\Contracts\ListableField;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\ResourceToolElement;
-use Laravel\Nova\Nova;
-use Illuminate\Support\Str;
 
 trait HasSubfields
 {
