@@ -7,6 +7,8 @@ use Laravel\Nova\Contracts\ListableField;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\MorphToMany;
 use Laravel\Nova\ResourceToolElement;
+use Laravel\Nova\Nova;
+use Illuminate\Support\Str;
 
 trait HasSubfields
 {
@@ -61,12 +63,10 @@ trait HasSubfields
     {
         return $this->resourceInstance->availableFields($this->request)->reject(function ($field) use ($filterKey) {
             return $field instanceof ListableField ||
-            $field instanceof ResourceToolElement ||
-            $field->attribute === $this->resourceInstance::newModel()->getKeyName() ||
-            $field->attribute === 'ComputedField' ||
-            !$field->$filterKey ||
-                (isset($field->resourceName) && ($field->resourceName === $this->meta['viaResource']) && $this->setInverseRelationship($field->attribute)) ||
-                ($this->request->getMethod() === 'GET' && ($field instanceof MorphTo || $field instanceof MorphToMany));
+                $field instanceof ResourceToolElement ||
+                $field->attribute === $this->resourceInstance::newModel()->getKeyName() ||
+                $field->attribute === 'ComputedField' ||
+                !$field->$filterKey || (isset($field->resourceName) && ($field->resourceName === $this->meta['viaResource']) && $this->setInverseRelationship($field->attribute)) || ($this->request->getMethod() === 'GET' && ($field instanceof MorphTo || $field instanceof MorphToMany));
         });
     }
 
@@ -80,7 +80,9 @@ trait HasSubfields
     {
         $this->inverseRelationship = $inverseRelationship;
 
-        $this->inverseRelationshipKey = $this->resourceInstance::newModel()->{$inverseRelationship}()->getForeignKeyName();
+        $foreignKeyMethod = $this->isUsingNova2() ? 'getForeignKeyName' : 'getForeignKey';
+
+        $this->inverseRelationshipKey = $this->resourceInstance::newModel()->{$inverseRelationship}()->{$foreignKeyMethod}();
 
         return $this;
     }
