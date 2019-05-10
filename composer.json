@@ -35,9 +35,11 @@
     "prefer-stable": true,
     "require-dev": {
         "laravel/nova": "^1.2",
-        "laravel/framework": "^5.7"
+        "laravel/framework": "^5.7",
+        "orchestra/testbench": "^3.7",
+        "phpunit/phpunit": "^7.0.0"
     },
     "scripts": {
-        "test": "./vendor/phpunit/phpunit"
+        "test": "vendor/bin/phpunit"
     }
 }
