@@ -10,8 +10,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=7.1.0",
-        "whitecube/nova-flexible-content": "^0.1.2"
+        "php": ">=7.1.0"
     },
     "repositories": [{
         "type": "composer",
@@ -35,6 +34,10 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
-        "laravel/nova": "^1.2"
+        "laravel/nova": "^1.2",
+        "laravel/framework": "^5.7"
+    },
+    "scripts": {
+        "test": "./vendor/phpunit/phpunit"
     }
 }
