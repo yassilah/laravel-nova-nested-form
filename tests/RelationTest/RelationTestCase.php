@@ -50,16 +50,61 @@ class RelationTestCase extends TestCase
      *
      * @return void
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
         $this->model = $this->modelClass::inRandomOrder()->first();
 
-        $this->nestedForm = new NestedForm(Str::title($this->relationshipName), $this->relationshipName, $this->relatedResource);
+        $this->nestedForm = NestedForm::make(Str::title($this->relationshipName), $this->relationshipName, $this->relatedResource);
 
-        $this->nestedForm->setRequest($this->model);
+        $this->nestedForm->resolve($this->model);
     }
+
+    /** @test */
+    public function it_can_fetch_the_name_of_the_related_resource()
+    {
+        $this->assertEquals($this->nestedForm->getRelateResourceName(), Nova::resourceForModel($this->modelClass)::uriKey());
+    }
+
+    /** @test */
+    public function it_can_fetch_the_id_of_the_related_resource()
+    {
+        $this->assertEquals($this->nestedForm->getRelateResourceId(), $this->model->id);
+    }
+
+    /** @test */
+    public function it_can_know_whether_relationship_is_many()
+    {
+        $this->assertEquals($this->nestedForm->isManyRelationship(), $this->isManyRelationship());
+    }
+
+    /** @test */
+    public function it_can_properly_format_the_heading()
+    {
+        $title = Str::title(Str::singular($this->relatedResource::uriKey()));
+
+        $this->assertEquals($this->nestedForm->getFormattedHeading(), NestedForm::INDEX . '.' . ' ' . $title);
+
+        $this->nestedForm->headingSeparator('-');
+        $this->assertEquals($this->nestedForm->getFormattedHeading(), NestedForm::INDEX . '-' . ' ' . $title);
+
+        $this->nestedForm->headingPrefix('MyPrefix');
+        $this->assertEquals($this->nestedForm->getFormattedHeading(), 'MyPrefix' . '-' . ' ' . $title);
+
+        $this->nestedForm->heading(NestedForm::INDEX . ' - Something');
+        $this->assertEquals($this->nestedForm->getFormattedHeading(), NestedForm::INDEX . ' - Something');
+    }
+
+    /** @test */
+    public function it_can_set_the_right_amount_of_children_resources()
+    {
+        $this->assertCount($this->model->{$this->relationshipName}()->count(), $this->nestedForm->getChildren());
+    }
+
+
+
+
 
     /**
      * Get the type of relationship to test.
@@ -68,7 +113,7 @@ class RelationTestCase extends TestCase
      */
     protected function getRelationshipTestType()
     {
-        return str_replace('Test', '', (new \ReflectionClass($this))->getShortName());
+        return Str::replaceLast('Test', '', (new \ReflectionClass($this))->getShortName());
     }
 
     /**
@@ -79,129 +124,6 @@ class RelationTestCase extends TestCase
      */
     public function isManyRelationship()
     {
-        return str_contains($this->getRelationshipTestType(), 'Many');
-    }
-
-    /** @test */
-    public function it_can_get_the_relationship_type()
-    {
-        $this->assertEquals($this->nestedForm->getRelationshipType(), $this->getRelationshipTestType());
-    }
-
-    /** @test */
-    public function it_can_add_the_relationship_type_to_the_meta()
-    {
-        $this->nestedForm->addRelationshipType();
-
-        $this->assertArrayHasKey(Str::snake($this->getRelationshipTestType()), $this->nestedForm->meta);
-
-        $this->assertTrue($this->nestedForm->meta[Str::snake($this->getRelationshipTestType())]);
-    }
-
-    /** @test */
-    public function it_can_add_whether_the_relationship_is_many_to_the_meta()
-    {
-        $this->nestedForm->addIsManyRelationship();
-
-        $this->assertArrayHasKey('is_many', $this->nestedForm->meta);
-
-        $this->assertEquals($this->nestedForm->meta['is_many'], $this->isManyRelationship());
-    }
-
-    /** @test */
-    public function it_can_set_the_request()
-    {
-        $request = $this->nestedForm->getRequest();
-
-        $this->assertEquals($request->resource, Nova::resourceForModel($this->model)::uriKey());
-        $this->assertEquals($request->id, $this->model->id);
-    }
-
-    /** @test */
-    public function it_can_add_the_children_to_the_meta()
-    {
-        $this->nestedForm->resolve($this->model);
-        $this->assertArrayHasKey('children', $this->nestedForm->meta);
-    }
-
-    /** @test */
-    public function it_has_the_right_amount_of_children()
-    {
-        $this->nestedForm->resolve($this->model);
-        $this->assertCount(count($this->nestedForm->meta['children']), $this->model->{$this->relationshipName}()->get());
-    }
-
-    /** @test */
-    public function it_has_set_the_nested_attributes_on_each_child()
-    {
-        $this->nestedForm->resolve($this->model);
-
-        $this->verifyNestedAttributes($this->nestedForm->meta['children']->toArray(), $this->nestedForm);
-    }
-
-    /** @test */
-    public function it_has_set_the_nested_headings_on_each_nested_form_child()
-    {
-        $this->nestedForm->resolve($this->model);
-
-        $this->verifyNestedHeadings($this->nestedForm->meta['children']->toArray(), $this->nestedForm);
-    }
-
-    /**
-     * Verify whether the nested attributes were set correctly
-     *
-     * @param array $children
-     * @param NestedForm $form
-     * @param NestedForm $form
-     *
-     * @return void
-     */
-    public function verifyNestedAttributes(array $children, NestedForm $form)
-    {
-        foreach ($children as $index => $child) {
-            foreach ($child->fields as $field) {
-                $shouldBe = $form->getNestedAttribute() . ($form->isManyRelationship($this->model) ? '[' . $index . ']' : '') . '[' . $field->attribute . ']';
-
-                $this->assertEquals($field->meta['attribute'], $shouldBe);
-                $this->assertEquals($field->meta['originalAttribute'], $field->attribute);
-
-                if ($field instanceof NestedForm) {
-                    $this->verifyNestedAttributes($field->meta['children']->toArray(), $field);
-                }
-            }
-        }
-    }
-
-    /**
-     * Verify whether the nested headings were set correctly
-     *
-     * @param array $children
-     * @param NestedForm $form
-     * @param NestedForm $form
-     *
-     * @return void
-     */
-    public function verifyNestedHeadings(array $children, NestedForm $form, int $index = null)
-    {
-
-        $shouldBe = $index ? $form->getHeadingForIndex($index) : $form->getHeading();
-
-        dd($form->meta['children']->heading);
-        $this->assertEquals($form->meta['heading'], $shouldBe);
-
-        foreach ($children as $index => $child) {
-            foreach ($child->fields as $field) {
-                if ($field instanceof NestedForm) {
-                    $field->verifyNestedHeadings($field->meta['children']->toArray(), $field, $index);
-                }
-            }
-        }
-    }
-
-    /** @test */
-    public function it_can_add_the_schema_to_the_meta()
-    {
-        $this->nestedForm->resolve($this->model);
-        $this->assertArrayHasKey('schema', $this->nestedForm->meta);
+        return Str::contains($this->getRelationshipTestType(), 'Many');
     }
 }

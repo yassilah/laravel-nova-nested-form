@@ -9,6 +9,7 @@ use Laravel\Nova\Fields\MorphMany;
 use Laravel\Nova\Fields\Text;
 use Laravel\Nova\Fields\Textarea;
 use Yassi\NestedForm\NestedForm;
+use Epartment\NovaDependencyContainer\NovaDependencyContainer;
 
 class Post extends Resource
 {
@@ -52,10 +53,11 @@ class Post extends Resource
 
             BelongsTo::make('User'),
 
+            NovaDependencyContainer::make([
+                NestedForm::make('Comments'),
+            ])->dependsOn('title', 'salut'),
+
             MorphMany::make('Comments'),
-
-            NestedForm::make('Comments'),
-
         ];
     }
 

@@ -6,6 +6,22 @@ use Illuminate\Database\Eloquent\Collection;
 
 class NestedFormChildren extends Collection
 {
+
+    /**
+     * Create a new collection.
+     *
+     * @param  mixed  $items
+     * @return void
+     */
+    public function __construct(Collection $items, NestedForm $parent)
+    {
+        $items = $items->map(function ($item, $index) use ($parent) {
+            return new NestedFormChild($item, $index, $parent);
+        })->all();
+
+        parent::__construct($items);
+    }
+
     /**
      * Find field by attribute name.
      *

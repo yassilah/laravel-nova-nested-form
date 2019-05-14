@@ -19,6 +19,8 @@ class FieldServiceProvider extends ServiceProvider
             Nova::script('nested-form', __DIR__ . '/../dist/js/field.js');
             Nova::style('nested-form', __DIR__ . '/../dist/css/field.css');
         });
+
+        NestedFormChild::storeAttributesTransformations();
     }
 
     /**

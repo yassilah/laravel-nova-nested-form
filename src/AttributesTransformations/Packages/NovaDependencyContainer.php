@@ -1,9 +1,13 @@
 <?php
+
+namespace Yassi\NestedForm\AttributesTransformations\Packages;
+
 use Laravel\Nova\Fields\FieldCollection;
+use Yassi\NestedForm\AttributesTransformations\AttributesTransformationInterface;
+use Laravel\Nova\Fields\Field;
+use Yassi\NestedForm\NestedFormChild;
 
-namespace Yassi\NestedForm\AttributesTransformations;
-
-class NovaDependencyContainer implements AttributesTransformation
+class NovaDependencyContainer implements AttributesTransformationInterface
 {
 
     /**

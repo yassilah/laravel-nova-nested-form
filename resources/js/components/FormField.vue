@@ -1,47 +1,58 @@
 <template>
   <div class="nested-form-container">
-    <!-- HEADING -->
-    <div class="p-4 border-b border-40 bg-30 flex justify-between items-center">
-      <h1 class="text-90 font-normal text-xl">{{ field.name }}</h1>
-      <button
-        v-if="displayAddButton"
-        type="button"
-        class="btn btn-default btn-primary btn-sm leading-none"
-        @click="add"
-      >
-        {{
-          __('Add a new :resourceSingularName', {
-            resourceSingularName: field.singularLabel
-          })
-        }}
-      </button>
-    </div>
-    <!-- HEADING -->
+
     <template v-if="field.children.length > 0">
-      <!-- ACTUAL FIELDS -->
-      <template v-for="(child, index) in field.children">
-        <component
-          v-for="(subfield, index) in child.fields"
-          :key="`${subfield.attribute}-${index}`"
-          :is="'form-' + subfield.component"
-          :field="subfield"
-          :errors="errors"
-          :resourceName="field.relatedResourceName"
-          :resourceId="field.relatedResourceId"
-        />
-      </template>
-      <!-- ACTUAL FIELDS -->
+
+      <div :key="index"
+           v-for="(child, index) in field.children">
+
+        <!-- HEADING -->
+        <div class="p-4 bg-40 flex justify-between items-center cursor-pointer text-80 hover:bg-30 hover:text-70"
+             @click.stop="child.opened = !child.opened">
+          <h4 class="font-bold"
+              :key="`heading-${index}`">{{ child.heading }}</h4>
+          <div class="flex">
+            <div @click.stop="remove(index)"
+                 class="appearance-none cursor-pointer text-70 hover:text-danger mr-3">
+              <icon type="delete" />
+            </div>
+            <div v-if="displayAddButton && index === field.children.length - 1"
+                 @click.stop="add"
+                 class="appearance-none cursor-pointer text-70 hover:text-warning mr-3">
+              <icon type="add" />
+            </div>
+          </div>
+        </div>
+        <!-- HEADING -->
+
+        <template v-if="child.opened">
+          <component v-for="(subfield, index) in child.fields"
+                     :key="`${subfield.attribute}-${index}`"
+                     :is="'form-' + subfield.component"
+                     :field="subfield"
+                     :errors="errors"
+                     :resourceName="field.relatedResourceName"
+                     :resourceId="field.relatedResourceId" />
+        </template>
+      </div>
     </template>
 
-    <template v-else>
-      <p class="m-8">
-        {{
-          __('No :resourcePluralName', {
-            resourcePluralName: field.pluralLabel
-          })
-        }}.
-      </p>
-    </template>
+    <field-wrapper v-else>
+      <div class="w-1/5 py-6 px-8">
+        <form-label :label-for="field.attribute">
+          {{ __('No :resourcePluralName', { resourcePluralName: field.pluralLabel }) }}.
+        </form-label>
+      </div>
+
+      <div class="py-6">
+        <button v-if="displayAddButton"
+                type="button"
+                class="btn btn-default btn-primary btn-sm leading-none"
+                @click="add">
+          {{ __('Add a new :resourceSingularName', { resourceSingularName: field.singularLabel }) }}
+        </button>
+      </div>
+    </field-wrapper>
   </div>
 </template>
 
@@ -59,10 +70,8 @@ export default {
      */
     displayAddButton() {
       return (
-        (this.field.is_many_relationship || this.field.children.length === 0) &&
-        (this.field.max > 0
-          ? this.field.max > this.field.children.length
-          : true)
+        (this.field.isManyRelationship || this.field.children.length === 0) &&
+        (this.field.max > 0 ? this.field.max > this.field.children.length : true)
       )
     }
   },
@@ -83,6 +92,13 @@ export default {
     },
 
     /**
+     * This removes the current child.
+     */
+    remove(index) {
+      this.field.children.splice(index, 1)
+    },
+
+    /**
      * Overrides the fill method.
      */
     fill(formData) {
@@ -100,19 +116,33 @@ export default {
     /**
      * This replaces the "{{index}}" values of the schema to
      * their actual index.
-     *
      */
     replaceIndexesInSchema(field) {
-      const schema = JSON.parse(JSON.stringify(field.schema))
+      return this.replaceIndexKeys(field.schema)
+    },
 
-      schme.fields.forEach(field => {
-        field.attribute = field.attribute.replace(
-          this.field.INDEX,
-          this.field.children.length
-        )
-      })
+    /**
+     * Recursively replace the INDEX key.
+     */
+    replaceIndexKeys(current) {
+      current = JSON.parse(JSON.stringify(current))
 
-      return schema
+      for (let key in current) {
+        if (Array.isArray(current[key]) || typeof current[key] === 'object') {
+          current[key] = this.replaceIndexKeys(current[key])
+        } else if (key !== 'INDEX' && typeof current[key] === 'string') {
+          current[key] = this.replaceIndexValue(current[key], key === 'heading')
+        }
+      }
+
+      return current
+    },
+
+    /**
+     * Replace the INDEX key with the number of children.
+     */
+    replaceIndexValue(value, isHeading) {
+      return value.replace(this.field.INDEX, this.field.children.length + (isHeading ? 1 : 0))
     }
   }
 }

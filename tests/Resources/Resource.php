@@ -4,9 +4,12 @@ namespace Yassi\NestedForm\Tests\Resources;
 
 use Laravel\Nova\Resource as NovaResource;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Epartment\NovaDependencyContainer\HasDependencies;
 
 abstract class Resource extends NovaResource
 {
+    use HasDependencies;
+
     /**
      * Build an "index" query for the given resource.
      *

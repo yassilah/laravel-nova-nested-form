@@ -1,10 +1,11 @@
 <?php
-use Laravel\Nova\Fields\Field;
-use Yassi\NestedForm\NestedFormChild;
 
 namespace Yassi\NestedForm\AttributesTransformations;
 
-interface AttributesTransformation
+use Laravel\Nova\Fields\Field;
+use Yassi\NestedForm\NestedFormChild;
+
+interface AttributesTransformationInterface
 {
 
     /**

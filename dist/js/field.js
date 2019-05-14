@@ -60,112 +60,74 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 41);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 121:
+/******/ ([
+/* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var render = function() {
-  var _vm = this
-  var _h = _vm.$createElement
-  var _c = _vm._self._c || _h
-  return _c(
-    "div",
-    { staticClass: "nested-form-container" },
-    [
-      _c(
-        "div",
-        {
-          staticClass:
-            "p-4 border-b border-40 bg-30 flex justify-between items-center"
-        },
-        [
-          _c("h1", { staticClass: "text-90 font-normal text-xl" }, [
-            _vm._v(_vm._s(_vm.field.name))
-          ]),
-          _vm._v(" "),
-          _vm.displayAddButton
-            ? _c(
-                "button",
-                {
-                  staticClass:
-                    "btn btn-default btn-primary btn-sm leading-none",
-                  attrs: { type: "button" },
-                  on: { click: _vm.add }
-                },
-                [
-                  _vm._v(
-                    "\n      " +
-                      _vm._s(
-                        _vm.__("Add a new :resourceSingularName", {
-                          resourceSingularName: _vm.field.singularLabel
-                        })
-                      ) +
-                      "\n    "
-                  )
-                ]
-              )
-            : _vm._e()
-        ]
-      ),
-      _vm._v(" "),
-      _vm.field.children.length > 0
-        ? [
-            _vm._l(_vm.field.children, function(child, index) {
-              return _vm._l(child.fields, function(subfield, index) {
-                return _c("form-" + subfield.component, {
-                  key: subfield.attribute + "-" + index,
-                  tag: "component",
-                  attrs: {
-                    field: subfield,
-                    errors: _vm.errors,
-                    resourceName: _vm.field.relatedResourceName,
-                    resourceId: _vm.field.relatedResourceId
-                  }
-                })
-              })
-            })
-          ]
-        : [
-            _c("p", { staticClass: "m-8" }, [
-              _vm._v(
-                "\n      " +
-                  _vm._s(
-                    _vm.__("No :resourcePluralName", {
-                      resourcePluralName: _vm.field.pluralLabel
-                    })
-                  ) +
-                  ".\n    "
-              )
-            ])
-          ]
-    ],
-    2
-  )
-}
-var staticRenderFns = []
-render._withStripped = true
-module.exports = { render: render, staticRenderFns: staticRenderFns }
-if (false) {
+__webpack_require__(1);
+module.exports = __webpack_require__(7);
+
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+Nova.booting(function (Vue, router) {
+    Vue.component('form-nested-form', __webpack_require__(2));
+});
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var disposed = false
+var normalizeComponent = __webpack_require__(3)
+/* script */
+var __vue_script__ = __webpack_require__(4)
+/* template */
+var __vue_template__ = __webpack_require__(6)
+/* template functional */
+var __vue_template_functional__ = false
+/* styles */
+var __vue_styles__ = null
+/* scopeId */
+var __vue_scopeId__ = null
+/* moduleIdentifier (server only) */
+var __vue_module_identifier__ = null
+var Component = normalizeComponent(
+  __vue_script__,
+  __vue_template__,
+  __vue_template_functional__,
+  __vue_styles__,
+  __vue_scopeId__,
+  __vue_module_identifier__
+)
+Component.options.__file = "resources/js/components/FormField.vue"
+
+/* hot reload */
+if (false) {(function () {
+  var hotAPI = require("vue-hot-reload-api")
+  hotAPI.install(require("vue"), false)
+  if (!hotAPI.compatible) return
   module.hot.accept()
-  if (module.hot.data) {
-    require("vue-hot-reload-api")      .rerender("data-v-c023248a", module.exports)
+  if (!module.hot.data) {
+    hotAPI.createRecord("data-v-c023248a", Component.options)
+  } else {
+    hotAPI.reload("data-v-c023248a", Component.options)
   }
-}
+  module.hot.dispose(function (data) {
+    disposed = true
+  })
+})()}
+
+module.exports = Component.exports
+
 
 /***/ }),
-
-/***/ 122:
-/***/ (function(module, exports) {
-
-// removed by extract-text-webpack-plugin
-
-/***/ }),
-
-/***/ 2:
+/* 3 */
 /***/ (function(module, exports) {
 
 /* globals __VUE_SSR_CONTEXT__ */
@@ -274,8 +236,172 @@ module.exports = function normalizeComponent (
 
 
 /***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-/***/ 25:
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_laravel_nova__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_laravel_nova___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_laravel_nova__);
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+
+
+
+/* harmony default export */ __webpack_exports__["default"] = ({
+  mixins: [__WEBPACK_IMPORTED_MODULE_0_laravel_nova__["FormField"], __WEBPACK_IMPORTED_MODULE_0_laravel_nova__["HandlesValidationErrors"]],
+
+  props: ['resourceName', 'resourceId', 'field'],
+
+  computed: {
+    /**
+     * Whether or not to display the add button
+     */
+    displayAddButton: function displayAddButton() {
+      return (this.field.isManyRelationship || this.field.children.length === 0) && (this.field.max > 0 ? this.field.max > this.field.children.length : true);
+    }
+  },
+
+  methods: {
+    /**
+     * This toggles the visibility of the
+     * content of the related resource
+     */
+    toggleVisibility: function toggleVisibility() {
+      this.field.opened = !this.field.opened;
+    },
+
+    /**
+     * This adds a resource to the children
+     */
+    add: function add() {
+      this.field.children.push(this.replaceIndexesInSchema(this.field));
+    },
+
+
+    /**
+     * This removes the current child.
+     */
+    remove: function remove(index) {
+      this.field.children.splice(index, 1);
+    },
+
+
+    /**
+     * Overrides the fill method.
+     */
+    fill: function fill(formData) {
+      var _this = this;
+
+      this.field.children.forEach(function (child) {
+        child.fields.forEach(function (field) {
+          return field.fill(formData);
+        });
+        formData.append(child.attribute + _this.field.SEPARATOR + _this.field.ID, child[_this.field.ID]);
+      });
+
+      console.dir(formData.forEach(function (v, k) {
+        return console.log(v, k);
+      }));
+    },
+
+
+    /**
+     * This replaces the "{{index}}" values of the schema to
+     * their actual index.
+     */
+    replaceIndexesInSchema: function replaceIndexesInSchema(field) {
+      return this.replaceIndexKeys(field.schema);
+    },
+
+
+    /**
+     * Recursively replace the INDEX key.
+     */
+    replaceIndexKeys: function replaceIndexKeys(current) {
+      current = JSON.parse(JSON.stringify(current));
+
+      for (var key in current) {
+        if (Array.isArray(current[key]) || _typeof(current[key]) === 'object') {
+          current[key] = this.replaceIndexKeys(current[key]);
+        } else if (key !== 'INDEX' && typeof current[key] === 'string') {
+          current[key] = this.replaceIndexValue(current[key], key === 'heading');
+        }
+      }
+
+      return current;
+    },
+
+
+    /**
+     * Replace the INDEX key with the number of children.
+     */
+    replaceIndexValue: function replaceIndexValue(value, isHeading) {
+      return value.replace(this.field.INDEX, this.field.children.length + (isHeading ? 1 : 0));
+    }
+  }
+});
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -10483,199 +10609,167 @@ module.exports = g;
 });
 
 /***/ }),
-
-/***/ 41:
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(42);
-module.exports = __webpack_require__(122);
-
-
-/***/ }),
-
-/***/ 42:
-/***/ (function(module, exports, __webpack_require__) {
-
-Nova.booting(function (Vue, router) {
-    Vue.component('form-nested-form', __webpack_require__(43));
-});
-
-/***/ }),
-
-/***/ 43:
-/***/ (function(module, exports, __webpack_require__) {
-
-var disposed = false
-var normalizeComponent = __webpack_require__(2)
-/* script */
-var __vue_script__ = __webpack_require__(44)
-/* template */
-var __vue_template__ = __webpack_require__(121)
-/* template functional */
-var __vue_template_functional__ = false
-/* styles */
-var __vue_styles__ = null
-/* scopeId */
-var __vue_scopeId__ = null
-/* moduleIdentifier (server only) */
-var __vue_module_identifier__ = null
-var Component = normalizeComponent(
-  __vue_script__,
-  __vue_template__,
-  __vue_template_functional__,
-  __vue_styles__,
-  __vue_scopeId__,
-  __vue_module_identifier__
-)
-Component.options.__file = "resources/js/components/FormField.vue"
-
-/* hot reload */
-if (false) {(function () {
-  var hotAPI = require("vue-hot-reload-api")
-  hotAPI.install(require("vue"), false)
-  if (!hotAPI.compatible) return
+var render = function() {
+  var _vm = this
+  var _h = _vm.$createElement
+  var _c = _vm._self._c || _h
+  return _c(
+    "div",
+    { staticClass: "nested-form-container" },
+    [
+      _vm.field.children.length > 0
+        ? _vm._l(_vm.field.children, function(child, index) {
+            return _c(
+              "div",
+              { key: index },
+              [
+                _c(
+                  "div",
+                  {
+                    staticClass:
+                      "p-4 bg-40 flex justify-between items-center cursor-pointer text-80 hover:bg-30 hover:text-70",
+                    on: {
+                      click: function($event) {
+                        $event.stopPropagation()
+                        child.opened = !child.opened
+                      }
+                    }
+                  },
+                  [
+                    _c(
+                      "h4",
+                      { key: "heading-" + index, staticClass: "font-bold" },
+                      [_vm._v(_vm._s(child.heading))]
+                    ),
+                    _vm._v(" "),
+                    _c("div", { staticClass: "flex" }, [
+                      _c(
+                        "div",
+                        {
+                          staticClass:
+                            "appearance-none cursor-pointer text-70 hover:text-danger mr-3",
+                          on: {
+                            click: function($event) {
+                              $event.stopPropagation()
+                              return _vm.remove(index)
+                            }
+                          }
+                        },
+                        [_c("icon", { attrs: { type: "delete" } })],
+                        1
+                      ),
+                      _vm._v(" "),
+                      _vm.displayAddButton &&
+                      index === _vm.field.children.length - 1
+                        ? _c(
+                            "div",
+                            {
+                              staticClass:
+                                "appearance-none cursor-pointer text-70 hover:text-warning mr-3",
+                              on: {
+                                click: function($event) {
+                                  $event.stopPropagation()
+                                  return _vm.add($event)
+                                }
+                              }
+                            },
+                            [_c("icon", { attrs: { type: "add" } })],
+                            1
+                          )
+                        : _vm._e()
+                    ])
+                  ]
+                ),
+                _vm._v(" "),
+                child.opened
+                  ? _vm._l(child.fields, function(subfield, index) {
+                      return _c("form-" + subfield.component, {
+                        key: subfield.attribute + "-" + index,
+                        tag: "component",
+                        attrs: {
+                          field: subfield,
+                          errors: _vm.errors,
+                          resourceName: _vm.field.relatedResourceName,
+                          resourceId: _vm.field.relatedResourceId
+                        }
+                      })
+                    })
+                  : _vm._e()
+              ],
+              2
+            )
+          })
+        : _c("field-wrapper", [
+            _c(
+              "div",
+              { staticClass: "w-1/5 py-6 px-8" },
+              [
+                _c(
+                  "form-label",
+                  { attrs: { "label-for": _vm.field.attribute } },
+                  [
+                    _vm._v(
+                      "\n        " +
+                        _vm._s(
+                          _vm.__("No :resourcePluralName", {
+                            resourcePluralName: _vm.field.pluralLabel
+                          })
+                        ) +
+                        ".\n      "
+                    )
+                  ]
+                )
+              ],
+              1
+            ),
+            _vm._v(" "),
+            _c("div", { staticClass: "py-6" }, [
+              _vm.displayAddButton
+                ? _c(
+                    "button",
+                    {
+                      staticClass:
+                        "btn btn-default btn-primary btn-sm leading-none",
+                      attrs: { type: "button" },
+                      on: { click: _vm.add }
+                    },
+                    [
+                      _vm._v(
+                        "\n        " +
+                          _vm._s(
+                            _vm.__("Add a new :resourceSingularName", {
+                              resourceSingularName: _vm.field.singularLabel
+                            })
+                          ) +
+                          "\n      "
+                      )
+                    ]
+                  )
+                : _vm._e()
+            ])
+          ])
+    ],
+    2
+  )
+}
+var staticRenderFns = []
+render._withStripped = true
+module.exports = { render: render, staticRenderFns: staticRenderFns }
+if (false) {
   module.hot.accept()
-  if (!module.hot.data) {
-    hotAPI.createRecord("data-v-c023248a", Component.options)
-  } else {
-    hotAPI.reload("data-v-c023248a", Component.options)
+  if (module.hot.data) {
+    require("vue-hot-reload-api")      .rerender("data-v-c023248a", module.exports)
   }
-  module.hot.dispose(function (data) {
-    disposed = true
-  })
-})()}
-
-module.exports = Component.exports
-
+}
 
 /***/ }),
+/* 7 */
+/***/ (function(module, exports) {
 
-/***/ 44:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_laravel_nova__ = __webpack_require__(25);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_laravel_nova___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_laravel_nova__);
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-
-
-
-/* harmony default export */ __webpack_exports__["default"] = ({
-  mixins: [__WEBPACK_IMPORTED_MODULE_0_laravel_nova__["FormField"], __WEBPACK_IMPORTED_MODULE_0_laravel_nova__["HandlesValidationErrors"]],
-
-  props: ['resourceName', 'resourceId', 'field'],
-
-  computed: {
-    /**
-     * Whether or not to display the add button
-     */
-    displayAddButton: function displayAddButton() {
-      return (this.field.is_many_relationship || this.field.children.length === 0) && (this.field.max > 0 ? this.field.max > this.field.children.length : true);
-    }
-  },
-
-  methods: {
-    /**
-     * This toggles the visibility of the
-     * content of the related resource
-     */
-    toggleVisibility: function toggleVisibility() {
-      this.field.opened = !this.field.opened;
-    },
-
-    /**
-     * This adds a resource to the children
-     */
-    add: function add() {
-      this.field.children.push(this.replaceIndexesInSchema(this.field));
-    },
-
-
-    /**
-     * Overrides the fill method.
-     */
-    fill: function fill(formData) {
-      var _this = this;
-
-      this.field.children.forEach(function (child) {
-        child.fields.forEach(function (field) {
-          return field.fill(formData);
-        });
-        formData.append(child.attribute + _this.field.SEPARATOR + _this.field.ID, child[_this.field.ID]);
-      });
-
-      console.dir(formData.forEach(function (v, k) {
-        return console.log(v, k);
-      }));
-    },
-
-
-    /**
-     * This replaces the "{{index}}" values of the schema to
-     * their actual index.
-     *
-     */
-    replaceIndexesInSchema: function replaceIndexesInSchema(field) {
-      var _this2 = this;
-
-      var schema = JSON.parse(JSON.stringify(field.schema));
-
-      schme.fields.forEach(function (field) {
-        field.attribute = field.attribute.replace(_this2.field.INDEX, _this2.field.children.length);
-      });
-
-      return schema;
-    }
-  }
-});
+// removed by extract-text-webpack-plugin
 
 /***/ })
-
-/******/ });
+/******/ ]);

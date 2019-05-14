@@ -3,21 +3,15 @@
 namespace Yassi\NestedForm;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use JsonSerializable;
-use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\BelongsToMany;
-use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\FieldCollection;
-use Laravel\Nova\Fields\HasMany;
-use Laravel\Nova\Fields\HasOne;
-use Laravel\Nova\Fields\MorphMany;
-use Laravel\Nova\Fields\MorphOne;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
+use Yassi\NestedForm\AttributesTransformations\CanTransformAttributes;
 
 class NestedFormChild implements JsonSerializable
 {
+    use CanTransformAttributes;
 
     /**
      * List of fields.
@@ -48,27 +42,6 @@ class NestedFormChild implements JsonSerializable
     protected $index;
 
     /**
-     * Heading.
-     *
-     * @var string
-     */
-    protected $heading;
-
-    /**
-     * Opened.
-     *
-     * @var bool
-     */
-    protected $opened;
-
-    /**
-     * Attributes transformation classes.
-     * 
-     * @var array
-     */
-    protected $attributesTransformations;
-
-    /**
      * Create a new child.
      *
      * @param  Model  $model
@@ -77,13 +50,20 @@ class NestedFormChild implements JsonSerializable
      */
     public function __construct(Model $model, $index, NestedForm $parent)
     {
-
         $this->model = $model;
         $this->parent = $parent;
         $this->index = $index;
+        $this->setFields(app(NovaRequest::class));
+    }
 
-        $request = app(NovaRequest::class);
 
+    /**
+     * Set list of fields.
+     * 
+     * @return  FieldCollection
+     */
+    protected function setFields(NovaRequest $request)
+    {
         $this->fields = Nova::newResourceFromModel($this->model)->updateFields($request)->filter(function ($field) use ($request) {
             if ($field instanceof BelongsTo && $field->resourceName === $request->resource) {
                 return false;
@@ -92,100 +72,27 @@ class NestedFormChild implements JsonSerializable
             return true;
         });
 
-        $this->heading('')->open(true)->resolve();
-    }
-
-    /**
-     * Resolve the fields.
-     *
-     * @return  self
-     */
-    protected function resolve()
-    {
-
-        $this->recursivelyTransformAttributes($this->fields);
-
-        foreach ($this->fields as $field) {
-            if ($this->isRelational($field)) {
-                $this->model->setRelation($field->attribute, $this->model->{$field->originalAttribute});
-            }
-
-            $field->resolve($this->model, $field->originalAttribute);
-        }
-
         return $this;
     }
 
     /**
-     * Wheck whether the given field is a
-     * relational field.
-     *
-     * @param  Field  $field
+     * Get opened.
+     * 
      * @return  bool
      */
-    protected function isRelational(Field $field)
+    protected function getOpened()
     {
-        return $field instanceof BelongsTo ||
-            $field instanceof HasOne ||
-            $field instanceof HasMany ||
-            $field instanceof MorphOne ||
-            $field instanceof MorphMany ||
-            $field instanceof BelongsToMany;
+        return $this->parent->opened === 'only first' && $this->index === 0 || $this->parent->opened === true;
     }
 
     /**
-     * Recursively transform attributes.
-     *
-     * @param  FieldCollection  $fields
-     * @return  self
-     */
-    protected function recursivelyTransformAttributes(FieldCollection $fields)
-    {
-        if (!$this->attributesTransformations) {
-            $this->storeAttributesTransformations();
-        }
-
-        $fields->each(function ($field) {
-            $field->originalAttribute = $field->attribute;
-
-            $field->attribute = $this->getTransformedAttribute($field->attribute);
-
-            foreach ($this->attributesTransformations as $className) {
-                if (str_contains(new \ReflectionClass($field), $className)) {
-                    $className::transformAttributesOf($field, $this);
-                }
-            }
-        });
-    }
-
-    /**
-     * Get the transformed attribute.
-     *
-     * @param  string  $attribute
+     * Get heading.
+     * 
      * @return  string
      */
-    protected function getTransformedAttribute(string $attribute = null)
+    protected function getHeading()
     {
-        return $this->parent->attribute . NestedForm::SEPARATOR . $this->index . ($attribute ? NestedForm::SEPARATOR . $attribute : '');
-    }
-
-    /**
-     * Store and require the available attributes 
-     * transformations.
-     * 
-     * @return  array
-     */
-    protected function storeAttributesTransformations()
-    {
-        $this->attributesTransformations = [];
-
-        foreach (glob(__DIR__ . '/AttributesTransformations/*.php') as $filename) {
-            require $filename;
-
-            $this->attributesTransformations[] = basename($filename);
-        }
-
-        return $this->attributesTransformations;
+        return $this->parent->makeHeadingForIndex($this->index);
     }
 
     /**
@@ -196,37 +103,9 @@ class NestedFormChild implements JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'fields' => $this->fields->values(),
-            'heading' => $this->heading,
-            'opened' => $this->opened,
-            'attribute' => $this->getTransformedAttribute(),
-            NestedForm::ID => $this->model->id,
+            'opened' => $this->getOpened(),
+            'fields' => $this->recursivelyTransformAttributes($this->fields),
+            'heading' => $this->getHeading()
         ];
-    }
-
-    /**
-     * Set heading.
-     *
-     * @param  string  $heading
-     * @return  self
-     */
-    public function heading(string $heading)
-    {
-        $this->heading = $heading;
-
-        return $this;
-    }
-
-    /**
-     * Set opened.
-     *
-     * @param  bool|string  $opened
-     * @return  self
-     */
-    public function open($opened)
-    {
-        $this->opened = $opened;
-
-        return $this;
     }
 }

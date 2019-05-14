@@ -28,18 +28,24 @@
             ]
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Yassi\\NestedForm\\Tests\\": "tests/"
+        }
+    },
     "config": {
         "sort-packages": true
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require-dev": {
-        "laravel/nova": "^1.2",
+        "epartment/nova-dependency-container": "^1.1",
         "laravel/framework": "^5.7",
+        "laravel/nova": "^1.2",
         "orchestra/testbench": "^3.7",
         "phpunit/phpunit": "^7.0.0"
     },
     "scripts": {
-        "test": "vendor/bin/phpunit"
+        "test": "vendor/bin/phpunit --verbose"
     }
 }
