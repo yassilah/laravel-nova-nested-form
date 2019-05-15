@@ -132,6 +132,8 @@ class NestedForm extends Field
         $this->viaRelationship = $this->attribute;
     }
 
+
+
     /**
      * Resolve the form fields.
      *
@@ -153,11 +155,11 @@ class NestedForm extends Field
      * 
      * @return  NestedFormChildren
      */
-    public function getChildren()
+    protected function getChildren()
     {
-        return new NestedFormChildren($this->relatedResource->{$this->viaRelationship}()->get()->map(function ($item, $index) {
+        return $this->relatedResource->{$this->viaRelationship}()->get()->map(function ($item, $index) {
             return new NestedFormChild($item, $index, $this);
-        }));
+        });
     }
 
     /**
@@ -165,7 +167,7 @@ class NestedForm extends Field
      * 
      * @return  NestedFormChildren
      */
-    protected function getSchema()
+    public function getSchema()
     {
         return new NestedFormChild(Nova::modelInstanceForKey($this->resourceName), self::INDEX, $this);
     }
@@ -320,17 +322,47 @@ class NestedForm extends Field
     }
 
     /**
+     * Checks chether the current route
+     * is trying to find a subfield on this nested form.
      * 
+     * @return  bool
+     */
+    protected static function isLookingForSubField()
+    {
+        return Str::contains(Route::currentRouteAction(), ['AssociatableController']) && !request('nestedFormResource');
+    }
+
+
+    /**
+     * Returns the subfield the current route
+     * is looking for.
+     * 
+     * @return  Field
+     */
+    protected static function findField(NestedForm $instance)
+    {
+        $request = request();
+
+        $request->merge(['nestedFormResource' => $instance->resourceName]);
+
+        $field = $instance->getSchema()->getFields()->findFieldInSchema($request->field);
+
+        $field->attribute = $request->field;
+
+        return $field;
+    }
+
+    /**
+     * Create a new instance.
+     * 
+     * @return  NestedForm|Field
      */
     public static function make(...$args)
     {
         $instance = new static(...$args);
 
-        $request = request();
-
-        if (Str::contains(Route::currentRouteAction(), ['AssociatableController']) && !$request->has('nestedFormResource')) {
-            $request->merge(['nestedFormResource' => $instance->resourceName]);
-            return $instance->resolve(NovaRequest::createFrom($request)->findModelOrFail($request->current))->getChildren()->findField($request->field);
+        if (static::isLookingForSubField()) {
+            return static::findField($instance);
         }
 
         return $instance;

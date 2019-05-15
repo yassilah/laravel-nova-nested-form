@@ -64,7 +64,7 @@ class NestedFormChild implements JsonSerializable
      */
     public function getFields()
     {
-        return $this->recursivelyTransformAttributes($this->fields);
+        return new NestedFormFields($this->recursivelyTransformAttributes($this->fields), $this->parent);
     }
 
     /**
