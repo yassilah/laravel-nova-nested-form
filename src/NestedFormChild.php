@@ -7,12 +7,12 @@ use JsonSerializable;
 use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
-use Yassi\NestedForm\AttributesTransformations\CanTransformAttributes;
 use Laravel\Nova\Fields\BelongsTo;
+use Yassi\NestedForm\PackageExtensions\HasPackageExtensions;
 
 class NestedFormChild implements JsonSerializable
 {
-    use CanTransformAttributes;
+    use HasPackageExtensions;
 
     /**
      * List of fields.
@@ -65,6 +65,42 @@ class NestedFormChild implements JsonSerializable
     public function getFields()
     {
         return $this->recursivelyTransformAttributes($this->fields);
+    }
+
+    /**
+     * Recursively transform attributes.
+     *
+     * @param  FieldCollection  $fields
+     * @return  self
+     */
+    public function recursivelyTransformAttributes(FieldCollection $fields)
+    {
+        $fields->each(function (&$field) {
+            if ($field instanceof NestedForm) {
+                $field->preprendToHeadingPrefix($this->parent->makeHeadingPrefixForIndex($this->index));
+            }
+
+            $field->originalAttribute = $field->attribute;
+
+            $field->attribute = $this->getTransformedAttribute($field->attribute);
+
+            $this->transformAttributesUsingPackageExtensions($field);
+
+            return $field;
+        });
+
+        return $fields;
+    }
+
+    /**
+     * Get the transformed attribute.
+     *
+     * @param  string  $attribute
+     * @return  string
+     */
+    public function getTransformedAttribute(string $attribute = null)
+    {
+        return $this->parent->attribute . NestedForm::SEPARATOR . $this->index . ($attribute ? NestedForm::SEPARATOR . $attribute : '');
     }
 
 

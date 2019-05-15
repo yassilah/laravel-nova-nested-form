@@ -5,6 +5,7 @@ namespace Yassi\NestedForm;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Events\ServingNova;
 use Laravel\Nova\Nova;
+use Yassi\NestedForm\PackageExtensions\HasPackageExtensions;
 
 class FieldServiceProvider extends ServiceProvider
 {
@@ -20,7 +21,7 @@ class FieldServiceProvider extends ServiceProvider
             Nova::style('nested-form', __DIR__ . '/../dist/css/field.css');
         });
 
-        NestedFormChild::storeAttributesTransformations();
+        HasPackageExtensions::storePackageExtensions();
     }
 
     /**

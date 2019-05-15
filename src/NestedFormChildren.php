@@ -2,9 +2,12 @@
 namespace Yassi\NestedForm;
 
 use Illuminate\Database\Eloquent\Collection;
+use Yassi\NestedForm\PackageExtensions\HasPackageExtensions;
 
 class NestedFormChildren extends Collection
 {
+
+    use HasPackageExtensions;
 
     /**
      * Find field by attribute name.
@@ -24,8 +27,14 @@ class NestedFormChildren extends Collection
      */
     public function allFields()
     {
-        return $this->flatMap->getFields()->map(function ($field) {
-            return $field instanceof NestedForm ? $field->getChildren()->allFields() : $field;
-        })->flatten();
+        return $this->flatMap->getFields()
+            ->map(function ($field) {
+                return $this->getFieldsUsingPackageExtensions($field);
+            })
+            ->flatten()
+            ->map(function ($field) {
+                return $field instanceof NestedForm ? $field->getChildren()->allFields() : $field;
+            })
+            ->flatten();
     }
 }
