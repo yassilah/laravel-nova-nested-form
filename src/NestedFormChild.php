@@ -8,6 +8,7 @@ use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Yassi\NestedForm\AttributesTransformations\CanTransformAttributes;
+use Laravel\Nova\Fields\BelongsTo;
 
 class NestedFormChild implements JsonSerializable
 {
@@ -56,6 +57,16 @@ class NestedFormChild implements JsonSerializable
         $this->setFields(app(NovaRequest::class));
     }
 
+    /**
+     * Get transformed attributes.
+     * 
+     * @return  self
+     */
+    public function getFields()
+    {
+        return $this->recursivelyTransformAttributes($this->fields);
+    }
+
 
     /**
      * Set list of fields.
@@ -64,13 +75,19 @@ class NestedFormChild implements JsonSerializable
      */
     protected function setFields(NovaRequest $request)
     {
-        $this->fields = Nova::newResourceFromModel($this->model)->updateFields($request)->filter(function ($field) use ($request) {
-            if ($field instanceof BelongsTo && $field->resourceName === $request->resource) {
-                return false;
-            }
-
-            return true;
-        });
+        $this->fields = Nova::newResourceFromModel($this->model)
+            /**
+             * Call either the updateFields or creationFields
+             * method depending on whether the model exists.
+             */
+            ->{$this->model->exists ? 'updateFields' : 'creationFields'}($request)
+            /**
+             * Remove the BelongsTo fields which correspond to the 
+             * parent resource.
+             */
+            ->reject(function ($field) use ($request) {
+                return $field instanceof BelongsTo && $request->newResource()->availableFields($request)->findFieldByAttribute($this->parent->attribute);
+            });
 
         return $this;
     }
@@ -104,8 +121,9 @@ class NestedFormChild implements JsonSerializable
     {
         return [
             'opened' => $this->getOpened(),
-            'fields' => $this->recursivelyTransformAttributes($this->fields),
-            'heading' => $this->getHeading()
+            'fields' => $this->getFields(),
+            'heading' => $this->getHeading(),
+            'resourceName' => $this->parent->resourceName
         ];
     }
 }

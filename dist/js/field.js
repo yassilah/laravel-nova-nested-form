@@ -302,7 +302,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 //
 //
 //
-//
 
 
 
@@ -10692,8 +10691,7 @@ var render = function() {
                         attrs: {
                           field: subfield,
                           errors: _vm.errors,
-                          resourceName: _vm.field.relatedResourceName,
-                          resourceId: _vm.field.relatedResourceId
+                          resourceName: subfield.resourceName
                         }
                       })
                     })

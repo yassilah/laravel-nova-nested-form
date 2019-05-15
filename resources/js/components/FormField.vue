@@ -31,8 +31,7 @@
                      :is="'form-' + subfield.component"
                      :field="subfield"
                      :errors="errors"
-                     :resourceName="field.relatedResourceName"
-                     :resourceId="field.relatedResourceId" />
+                     :resourceName="subfield.resourceName" />
         </template>
       </div>
     </template>

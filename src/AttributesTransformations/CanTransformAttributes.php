@@ -27,14 +27,16 @@ trait CanTransformAttributes
      */
     public function recursivelyTransformAttributes(FieldCollection $fields)
     {
-
-        $fields->each(function ($field) {
+        $fields->each(function (&$field) {
             if ($field instanceof NestedForm) {
                 $field->preprendToHeadingPrefix($this->parent->makeHeadingPrefixForIndex($this->index));
             }
+
             $field->originalAttribute = $field->attribute;
             $field->attribute = $this->getTransformedAttribute($field->attribute);
             $this->runAttributesTransformations($field);
+
+            return $field;
         });
 
         return $fields;

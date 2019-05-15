@@ -5,19 +5,15 @@ namespace Yassi\NestedForm;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Field;
-use Laravel\Nova\Fields\ResolvesReverseRelation;
 use Laravel\Nova\Fields\ResourceRelationshipGuesser;
 use Laravel\Nova\Nova;
 use ReflectionClass;
-use Illuminate\Support\Facades\Request;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Resource;
+use Illuminate\Support\Facades\Route;
 
 class NestedForm extends Field
 {
-
-    use ResolvesReverseRelation;
-
     /**
      * Index key.
      *
@@ -59,6 +55,13 @@ class NestedForm extends Field
      * @var string
      */
     public $resourceName;
+
+    /**
+     * The related model instance.
+     *
+     * @var Model
+     */
+    public $relatedResource;
 
     /**
      * The name of the Eloquent relationship.
@@ -139,13 +142,32 @@ class NestedForm extends Field
      */
     public function resolve($resource, $attribute = null)
     {
-        $this->withMeta([
-            'schema' => new NestedFormChild(Nova::modelInstanceForKey($this->resourceName), self::INDEX, $this),
-            'isManyRelationship' => $this->isManyRelationship($resource),
-            'children' => $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
-                return new NestedFormChild($model, $index, $this);
-            }),
-        ]);
+        $this->relatedResource = $resource;
+        $this->attribute = $attribute ?? $this->attribute;
+
+        return $this;
+    }
+
+    /**
+     * Get the list of children.
+     * 
+     * @return  NestedFormChildren
+     */
+    public function getChildren()
+    {
+        return new NestedFormChildren($this->relatedResource->{$this->viaRelationship}()->get()->map(function ($item, $index) {
+            return new NestedFormChild($item, $index, $this);
+        }));
+    }
+
+    /**
+     * Get the schema.
+     * 
+     * @return  NestedFormChildren
+     */
+    protected function getSchema()
+    {
+        return new NestedFormChild(Nova::modelInstanceForKey($this->resourceName), self::INDEX, $this);
     }
 
     /**
@@ -163,9 +185,9 @@ class NestedForm extends Field
      * 
      * @return  bool
      */
-    protected function isManyRelationship($resource)
+    protected function isManyRelationship()
     {
-        return Str::contains($this->getRelationshipType($resource), 'Many');
+        return Str::contains($this->getRelationshipType($this->relatedResource), 'Many');
     }
 
     /**
@@ -249,6 +271,7 @@ class NestedForm extends Field
     public function  makeHeadingForIndex($index)
     {
         $heading = $this->heading ?? $this->makeHeadingPrefixForIndex($index)  . ' ' . $this->getSingularLabel();
+
         return is_int($index) ? str_replace(self::INDEX, $index + 1, $heading) : $heading;
     }
 
@@ -261,6 +284,7 @@ class NestedForm extends Field
     public function  makeHeadingPrefixForIndex($index)
     {
         $headingPrefix = $this->headingPrefix . $this->headingSeparator;
+
         return is_int($index) ? str_replace(self::INDEX, $index + 1, $headingPrefix) : $headingPrefix;
     }
 
@@ -288,7 +312,27 @@ class NestedForm extends Field
             'ID' => self::ID,
             'SEPARATOR' => self::SEPARATOR,
             'pluralLabel' => $this->getPluralLabel(),
-            'singularLabel' => $this->getSingularLabel()
+            'singularLabel' => $this->getSingularLabel(),
+            'isManyRelationship' => $this->isManyRelationship(),
+            'children' => $this->getChildren(),
+            'schema' => $this->getSchema()
         ]);
+    }
+
+    /**
+     * 
+     */
+    public static function make(...$args)
+    {
+        $instance = new static(...$args);
+
+        $request = request();
+
+        if (Str::contains(Route::currentRouteAction(), ['AssociatableController']) && !$request->has('nestedFormResource')) {
+            $request->merge(['nestedFormResource' => $instance->resourceName]);
+            return $instance->resolve(NovaRequest::createFrom($request)->findModelOrFail($request->current))->getChildren()->findField($request->field);
+        }
+
+        return $instance;
     }
 }
