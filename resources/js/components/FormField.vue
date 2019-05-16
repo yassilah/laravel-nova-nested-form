@@ -10,7 +10,7 @@
         <div class="p-4 bg-40 flex justify-between items-center cursor-pointer text-80 hover:bg-30 hover:text-70"
              @click.stop="child.opened = !child.opened">
           <h4 class="font-bold"
-              :key="`heading-${index}`">{{ child.heading }}</h4>
+              :key="`heading-${index}`">{{ getProperHeading(child) }}</h4>
           <div class="flex">
             <div @click.stop="remove(index)"
                  class="appearance-none cursor-pointer text-70 hover:text-danger mr-3">
@@ -76,6 +76,18 @@ export default {
   },
 
   methods: {
+
+    /**
+     * Get the templated heading for a given
+     * child form.
+     */
+    getProperHeading(child) {
+      return child.heading.replace(/{{(.*?)}}/g, (match, key) => {
+        const field = child.fields.find(field => field.originalAttribute === key)
+        return field ? field.value : ''
+      })
+    },
+
     /**
      * This toggles the visibility of the
      * content of the related resource

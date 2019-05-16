@@ -80,7 +80,7 @@ class NestedFormChild implements JsonSerializable
                 $field->preprendToHeadingPrefix($this->parent->makeHeadingPrefixForIndex($this->index));
             }
 
-            $field->originalAttribute = $field->attribute;
+            $field->withMeta(['originalAttribute' => $field->attribute]);
 
             $field->attribute = $this->getTransformedAttribute($field->attribute);
 
@@ -157,7 +157,7 @@ class NestedFormChild implements JsonSerializable
     {
         return [
             'opened' => $this->getOpened(),
-            'fields' => $this->getFields(),
+            'fields' => $this->getFields()->values(),
             'heading' => $this->getHeading(),
             'resourceName' => $this->parent->resourceName
         ];

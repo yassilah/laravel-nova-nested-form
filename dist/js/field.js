@@ -320,6 +320,21 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
   },
 
   methods: {
+
+    /**
+     * Get the templated heading for a given
+     * child form.
+     */
+    getProperHeading: function getProperHeading(child) {
+      return child.heading.replace(/{{(.*?)}}/g, function (match, key) {
+        var field = child.fields.find(function (field) {
+          return field.originalAttribute === key;
+        });
+        return field ? field.value : '';
+      });
+    },
+
+
     /**
      * This toggles the visibility of the
      * content of the related resource
@@ -10641,7 +10656,7 @@ var render = function() {
                     _c(
                       "h4",
                       { key: "heading-" + index, staticClass: "font-bold" },
-                      [_vm._v(_vm._s(child.heading))]
+                      [_vm._v(_vm._s(_vm.getProperHeading(child)))]
                     ),
                     _vm._v(" "),
                     _c("div", { staticClass: "flex" }, [
