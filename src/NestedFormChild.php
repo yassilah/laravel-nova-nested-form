@@ -9,6 +9,7 @@ use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Fields\BelongsTo;
 use Yassi\NestedForm\PackageExtensions\HasPackageExtensions;
+use Laravel\Nova\Fields\ID;
 
 class NestedFormChild implements JsonSerializable
 {
@@ -77,10 +78,12 @@ class NestedFormChild implements JsonSerializable
     {
         $fields->each(function (&$field) {
             if ($field instanceof NestedForm) {
-                $field->preprendToHeadingPrefix($this->parent->makeHeadingPrefixForIndex($this->index));
+                $field->setIsInSchema(!$this->model->exists)->preprendToHeadingPrefix($this->parent->makeHeadingPrefixForIndex($this->index));
             }
 
-            $field->withMeta(['originalAttribute' => $field->attribute]);
+            $field->withMeta([
+                'originalAttribute' => $field->attribute
+            ]);
 
             $field->attribute = $this->getTransformedAttribute($field->attribute);
 
@@ -159,7 +162,9 @@ class NestedFormChild implements JsonSerializable
             'opened' => $this->getOpened(),
             'fields' => $this->getFields()->values(),
             'heading' => $this->getHeading(),
-            'resourceName' => $this->parent->resourceName
+            'resourceName' => $this->parent->resourceName,
+            NestedForm::ID => $this->model->id,
+            'attribute' => $this->getTransformedAttribute()
         ];
     }
 }

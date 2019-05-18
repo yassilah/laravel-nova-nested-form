@@ -77,7 +77,7 @@ trait HasHeading
     public function  makeHeadingForIndex($index)
     {
         $heading = $this->heading ?? $this->makeHeadingPrefixForIndex($index)  . ' ' . $this->getSingularLabel();
-
+        //return $heading;
         return is_int($index) ? str_replace(NestedForm::INDEX, $index + 1, $heading) : $heading;
     }
 
@@ -90,7 +90,7 @@ trait HasHeading
     public function  makeHeadingPrefixForIndex($index)
     {
         $headingPrefix = $this->headingPrefix . $this->headingSeparator;
-
+        //return $headingPrefix;
         return is_int($index) ? str_replace(NestedForm::INDEX, $index + 1, $headingPrefix) : $headingPrefix;
     }
 

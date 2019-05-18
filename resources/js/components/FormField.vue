@@ -12,7 +12,8 @@
           <h4 class="font-bold"
               :key="`heading-${index}`">{{ getProperHeading(child) }}</h4>
           <div class="flex">
-            <div @click.stop="remove(index)"
+            <div v-if="displayRemoveButton"
+                 @click.stop="remove(index)"
                  class="appearance-none cursor-pointer text-70 hover:text-danger mr-3">
               <icon type="delete" />
             </div>
@@ -25,14 +26,13 @@
         </div>
         <!-- HEADING -->
 
-        <template v-if="child.opened">
-          <component v-for="(subfield, index) in child.fields"
-                     :key="`${subfield.attribute}-${index}`"
-                     :is="'form-' + subfield.component"
-                     :field="subfield"
-                     :errors="errors"
-                     :resourceName="subfield.resourceName" />
-        </template>
+        <component v-for="(subfield, index) in child.fields"
+                   v-show="child.opened"
+                   :key="`${subfield.attribute}-${index}`"
+                   :is="'form-' + subfield.component"
+                   :field="subfield"
+                   :errors="errors"
+                   :resourceName="subfield.resourceName" />
       </div>
     </template>
 
@@ -63,6 +63,16 @@ export default {
 
   props: ['resourceName', 'resourceId', 'field'],
 
+  /**
+   * Add children if there are less than
+   * the minimum required.
+   */
+  created() {
+    while (this.field.children.length < this.field.min) {
+      this.add()
+    }
+  },
+
   computed: {
     /**
      * Whether or not to display the add button
@@ -71,6 +81,15 @@ export default {
       return (
         (this.field.isManyRelationship || this.field.children.length === 0) &&
         (this.field.max > 0 ? this.field.max > this.field.children.length : true)
+      )
+    },
+
+    /**
+     * Whether or not to display the remove button
+     */
+    displayRemoveButton() {
+      return (
+        (this.field.children.length > this.field.min)
       )
     }
   },
@@ -82,10 +101,14 @@ export default {
      * child form.
      */
     getProperHeading(child) {
-      return child.heading.replace(/{{(.*?)}}/g, (match, key) => {
-        const field = child.fields.find(field => field.originalAttribute === key)
-        return field ? field.value : ''
-      })
+      return child.heading
+        // .replace(new RegExp(this.field.INDEX, 'g'), (match, key) => {
+        //   return child.index
+        // })
+        .replace(/{{(.*?)}}/g, (match, key) => {
+          const field = child.fields.find(field => field.originalAttribute === key)
+          return field ? field.value : ''
+        })
     },
 
     /**
@@ -112,16 +135,13 @@ export default {
     /**
      * Overrides the fill method.
      */
-    fill(formData) {
+    fill(formData, field) {
       this.field.children.forEach(child => {
-        child.fields.forEach(field => field.fill(formData))
-        formData.append(
-          child.attribute + this.field.SEPARATOR + this.field.ID,
-          child[this.field.ID]
-        )
+        child.fields.forEach(field => {
+          field.fill(formData)
+          formData.append(child.attribute + this.field.SEPARATOR + this.field.ID, child[this.field.ID])
+        })
       })
-
-      console.dir(formData.forEach((v, k) => console.log(v, k)))
     },
 
     /**

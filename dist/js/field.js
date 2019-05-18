@@ -310,12 +310,31 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
   props: ['resourceName', 'resourceId', 'field'],
 
+  /**
+   * Add children if there are less than
+   * the minimum required.
+   */
+  created: function created() {
+    while (this.field.children.length < this.field.min) {
+      this.add();
+    }
+  },
+
+
   computed: {
     /**
      * Whether or not to display the add button
      */
     displayAddButton: function displayAddButton() {
       return (this.field.isManyRelationship || this.field.children.length === 0) && (this.field.max > 0 ? this.field.max > this.field.children.length : true);
+    },
+
+
+    /**
+     * Whether or not to display the remove button
+     */
+    displayRemoveButton: function displayRemoveButton() {
+      return this.field.children.length > this.field.min;
     }
   },
 
@@ -326,7 +345,11 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
      * child form.
      */
     getProperHeading: function getProperHeading(child) {
-      return child.heading.replace(/{{(.*?)}}/g, function (match, key) {
+      return child.heading
+      // .replace(new RegExp(this.field.INDEX, 'g'), (match, key) => {
+      //   return child.index
+      // })
+      .replace(/{{(.*?)}}/g, function (match, key) {
         var field = child.fields.find(function (field) {
           return field.originalAttribute === key;
         });
@@ -362,19 +385,15 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
     /**
      * Overrides the fill method.
      */
-    fill: function fill(formData) {
+    fill: function fill(formData, field) {
       var _this = this;
 
       this.field.children.forEach(function (child) {
         child.fields.forEach(function (field) {
-          return field.fill(formData);
+          field.fill(formData);
+          formData.append(child.attribute + _this.field.SEPARATOR + _this.field.ID, child[_this.field.ID]);
         });
-        formData.append(child.attribute + _this.field.SEPARATOR + _this.field.ID, child[_this.field.ID]);
       });
-
-      console.dir(formData.forEach(function (v, k) {
-        return console.log(v, k);
-      }));
     },
 
 
@@ -10660,21 +10679,23 @@ var render = function() {
                     ),
                     _vm._v(" "),
                     _c("div", { staticClass: "flex" }, [
-                      _c(
-                        "div",
-                        {
-                          staticClass:
-                            "appearance-none cursor-pointer text-70 hover:text-danger mr-3",
-                          on: {
-                            click: function($event) {
-                              $event.stopPropagation()
-                              return _vm.remove(index)
-                            }
-                          }
-                        },
-                        [_c("icon", { attrs: { type: "delete" } })],
-                        1
-                      ),
+                      _vm.displayRemoveButton
+                        ? _c(
+                            "div",
+                            {
+                              staticClass:
+                                "appearance-none cursor-pointer text-70 hover:text-danger mr-3",
+                              on: {
+                                click: function($event) {
+                                  $event.stopPropagation()
+                                  return _vm.remove(index)
+                                }
+                              }
+                            },
+                            [_c("icon", { attrs: { type: "delete" } })],
+                            1
+                          )
+                        : _vm._e(),
                       _vm._v(" "),
                       _vm.displayAddButton &&
                       index === _vm.field.children.length - 1
@@ -10698,19 +10719,25 @@ var render = function() {
                   ]
                 ),
                 _vm._v(" "),
-                child.opened
-                  ? _vm._l(child.fields, function(subfield, index) {
-                      return _c("form-" + subfield.component, {
-                        key: subfield.attribute + "-" + index,
-                        tag: "component",
-                        attrs: {
-                          field: subfield,
-                          errors: _vm.errors,
-                          resourceName: subfield.resourceName
-                        }
-                      })
-                    })
-                  : _vm._e()
+                _vm._l(child.fields, function(subfield, index) {
+                  return _c("form-" + subfield.component, {
+                    directives: [
+                      {
+                        name: "show",
+                        rawName: "v-show",
+                        value: child.opened,
+                        expression: "child.opened"
+                      }
+                    ],
+                    key: subfield.attribute + "-" + index,
+                    tag: "component",
+                    attrs: {
+                      field: subfield,
+                      errors: _vm.errors,
+                      resourceName: subfield.resourceName
+                    }
+                  })
+                })
               ],
               2
             )
