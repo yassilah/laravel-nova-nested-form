@@ -294,7 +294,7 @@ trait FillsSubAttributes
             if ($this->shouldRemoveAll) {
                 $ids = $model->{$this->viaRelationship}()->pluck('id');
             } else {
-                $ids = $model->{$this->viaRelationship}()->whereNotIn('id', $this->touched)->pluck('id');
+                $ids = $model->{$this->viaRelationship}()->whereNotIn($this->viaRelationship . '.id', $this->touched)->pluck($this->viaRelationship . '.id');
             }
 
             $request = CustomDeleteResourceRequest::createFrom($this->request->replace(['resources' => $ids]));
