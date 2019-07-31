@@ -227,6 +227,7 @@ class NestedForm extends Field
     public function jsonSerialize()
     {
         return array_merge([
+            'panel' => $this->panel,
             'component' => $this->component,
             'prefixComponent' => true,
             'resourceName' => $this->resourceName,
