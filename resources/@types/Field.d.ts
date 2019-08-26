@@ -7,4 +7,6 @@ export class Field {
   wrapRight: string
   value: any
   name: string
+  min: number
+  max: number
 }

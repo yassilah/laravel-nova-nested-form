@@ -2,6 +2,7 @@
   <nested-form-icon
     @click="removeChild"
     hover-color="danger"
+    v-if="field.children.length > field.min"
   >
     <icon
       class="cursor-pointer"

@@ -2,6 +2,7 @@
   <nested-form-icon
     @click="addChild"
     hover-color="success"
+    v-if="field.max === 0 || field.children.length < field.max"
   >
     <icon
       class="cursor-pointer"
@@ -63,6 +64,15 @@ export default class NestedFormAdd extends Vue {
     )
 
     return schema
+  }
+
+  /**
+   * On created.
+   */
+  public created() {
+    for (let i = this.field.children.length; i < this.field.min; i++) {
+      this.addChild()
+    }
   }
 }
 </script>
