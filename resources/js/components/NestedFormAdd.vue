@@ -1,22 +1,26 @@
 <template>
-  <div
+  <nested-form-icon
     @click="addChild"
-    class="block text-80 flex items-center justify-center hover:border-70 hover:text-70"
+    hover-color="success"
   >
     <icon
       class="cursor-pointer"
       type="add"
       viewBox="1.5 2 20 20"
     />
-  </div>
+  </nested-form-icon>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
+import { Field } from '../../@types/Field'
+import NestedFormIcon from './NestedFormIcon.vue'
 
-@Component
+@Component({
+  components: { NestedFormIcon }
+})
 export default class NestedFormAdd extends Vue {
-  @Prop() public field!: any
+  @Prop() public field!: Field
 
   /**
    * Add a new child.
@@ -41,6 +45,14 @@ export default class NestedFormAdd extends Vue {
         field.attribute = field.attribute.replace(
           this.field.indexKey,
           this.field.children.length
+        )
+      }
+      if (field.displayIf) {
+        field.displayIf = JSON.parse(
+          JSON.stringify(field.displayIf).replace(
+            new RegExp(this.field.indexKey, 'g'),
+            this.field.children.length.toString()
+          )
         )
       }
     })

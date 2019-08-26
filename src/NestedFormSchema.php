@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Resources\MergeValue;
 use Illuminate\Support\Facades\Request;
 use JsonSerializable;
+use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use ReflectionMethod;
@@ -58,17 +60,17 @@ class NestedFormSchema implements JsonSerializable
      */
     protected function fields()
     {
-        $originalResourceName = $this->request->route('resource');
 
         $this->request->route()->setParameter('resource', $this->parentForm->resourceName);
 
         $fields = $this->filterFields()->map(function ($field) {
-            if ($field instanceof NestedForm) {
-                $field->attribute = $this->attribute($field->attribute);
-            } else {
+            $field->withMeta([
+                'attribute' => $this->attribute($field->attribute)
+            ]);
+
+            if (!($field instanceof NestedForm)) {
                 $field->withMeta([
-                    'original_attribute' => $field->attribute,
-                    'attribute' => $this->attribute($field->attribute)
+                    'original_attribute' => $field->attribute
                 ]);
             }
 
@@ -78,7 +80,7 @@ class NestedFormSchema implements JsonSerializable
         })->values();
 
 
-        $this->request->route()->setParameter('resource', $originalResourceName);
+        $this->request->route()->setParameter('resource', $this->parentForm->fromResource);
 
         return $fields;
     }
@@ -88,7 +90,7 @@ class NestedFormSchema implements JsonSerializable
      */
     protected function attribute(string $attribute)
     {
-        return $this->parentForm->attribute . '[' . $this->index . ']' . '[' . $attribute . ']';
+        return $this->parentForm->attribute . '.' . $this->index .  '.' . $attribute;
     }
 
     /**
@@ -96,9 +98,9 @@ class NestedFormSchema implements JsonSerializable
      */
     protected function heading()
     {
-        $heading = isset($this->parentForm->heading) ? $this->parentForm->heading : $this->parentForm::INDEX . '. ' . $this->parentForm->singularLabel;
+        $heading = isset($this->parentForm->heading) ? $this->parentForm->heading : $this->parentForm::wrapIndex() . '. ' . $this->parentForm->singularLabel;
 
-        return str_replace($this->parentForm::INDEX, $this->index, $heading);
+        return str_replace($this->parentForm::wrapIndex(), $this->index, $heading);
     }
 
     /**
@@ -111,16 +113,19 @@ class NestedFormSchema implements JsonSerializable
 
         $method->setAccessible(true);
 
-        return $method->invoke($this->resourceInstance(), $this->request, collect($this->resourceInstance()->fields($this->request))->map(function ($field) {
-            if ($field instanceof Panel) {
-                return collect($field->data)->map(function ($field) {
-                    $field->panel = null;
-                    return $field;
-                })->values();
-            }
+        return $method->invoke($this->resourceInstance(), $this->request, collect($this->resourceInstance()->fields($this->request))
+            ->reject(function ($field) {
+                return $field instanceof BelongsTo && $field->resourceName === $this->parentForm->fromResource;
+            })->map(function ($field) {
+                if ($field instanceof Panel) {
+                    return collect($field->data)->map(function ($field) {
+                        $field->panel = null;
+                        return $field;
+                    })->values();
+                }
 
-            return $field;
-        })->flatten());
+                return $field;
+            })->flatten());
     }
 
     /**

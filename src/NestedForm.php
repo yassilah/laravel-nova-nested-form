@@ -13,14 +13,26 @@ use Laravel\Nova\Panel;
 class NestedForm extends Field
 {
 
+    /**
+     * Wrap left.
+     * 
+     * @var string
+     */
+    const WRAP_LEFT = '{{';
 
+    /**
+     * Wrap right.
+     * 
+     * @var string
+     */
+    const WRAP_RIGHT = '}}';
 
     /**
      * INDEX.
      * 
      * @var string
      */
-    const INDEX = '{{ INDEX }}';
+    const INDEX = 'INDEX';
 
     /**
      * The field's component.
@@ -86,6 +98,33 @@ class NestedForm extends Field
     public $heading;
 
     /**
+     * The maximum number of children.
+     * 
+     * @var int
+     */
+    public $max = 0;
+
+    /**
+     * The minimum number of children.
+     * 
+     * @var int
+     */
+    public $min = 0;
+
+    /**
+     * Condition to display the nested form.
+     */
+    public $displayIf;
+
+    /**
+     * Panel instance: this is the panel within which 
+     * the current nested form will be displayed.
+     * 
+     * @var Panel
+     */
+    protected $panelInstance;
+
+    /**
      * Create a new nested form.
      *
      * @param  string  $name
@@ -123,9 +162,10 @@ class NestedForm extends Field
             'children' => $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
                 return NestedFormChild::make($model, $index, $this);
             })->all(),
-            'schema' => NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), self::INDEX, $this)
+            'schema' => NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this)
         ]);
     }
+
 
     /**
      * Set the heading.
@@ -135,6 +175,8 @@ class NestedForm extends Field
     public function heading(string $heading)
     {
         $this->heading = $heading;
+
+        return $this->panelInstance ?? $this;
     }
 
     /**
@@ -145,21 +187,91 @@ class NestedForm extends Field
     public function opened(boolean $opened)
     {
         $this->opened = $opened;
+
+        return $this->panelInstance ?? $this;
     }
 
+    /**
+     * Set the maximum number of children.
+     */
+    public function max(int $max)
+    {
+        $this->max = $max;
+
+        return $this->panelInstance ?? $this;
+    }
 
     /**
-     * Create a new element.
-     *
-     * @return static
+     * Set the minimum number of children.
+     */
+    public function min(int $min)
+    {
+        $this->min = $min;
+
+        return $this->panelInstance ?? $this;
+    }
+
+    /**
+     * Set the condition to display the form.
+     */
+    public function displayIf(\Closure $displayIfCallback)
+    {
+        $this->displayIf = collect(call_user_func($displayIfCallback, $this, app(Novarequest::class)))->map(function ($condition) {
+            if (isset($condition['attribute'])) {
+                $condition['attribute'] = static::conditional($condition['attribute']);
+            }
+
+            return $condition;
+        });
+
+        return $this->panelInstance ?? $this;
+    }
+
+    /**
+     * Set the panel instance.
+     */
+    public function setPanelInstance(Panel $panel)
+    {
+        $this->panelInstance = $panel;
+    }
+
+    /**
+     * Create a new NestedForm instance.
      */
     public static function make(...$arguments)
     {
-        $instance = new static(...$arguments);
+        return new NestedFormPanel(new static(...$arguments));
+    }
 
-        return new Panel($instance->name, [
-            $instance
-        ]);
+    /**
+     * Wrap an attribute into a dynamic attribute
+     * value.
+     * 
+     * @param string $attribute
+     * @param string $default
+     */
+    public static function wrapAttribute(string $attribute, $default = '')
+    {
+        return self::WRAP_LEFT . $attribute . '|' . $default . self::WRAP_RIGHT;
+    }
+
+    /**
+     * Turn a given attribute string into 
+     * a conditional attribute.
+     * 
+     * @param string $attribute
+     */
+    public static function conditional(string $attribute)
+    {
+        return preg_replace('/\.\$\./', '.' . static::wrapIndex() . '.', preg_replace('/\.\*\./', '\.[0-9]+\.', $attribute));
+    }
+
+    /**
+     * Wrap the index key.
+     */
+    public static function wrapIndex()
+    {
+        return self::WRAP_LEFT . self::INDEX . self::WRAP_RIGHT;
     }
 
     /**
@@ -174,7 +286,12 @@ class NestedForm extends Field
             [
                 'singularLabel' => $this->singularLabel,
                 'pluralLabel' => $this->pluralLabel,
-                'indexKey' => static::INDEX
+                'indexKey' => static::wrapIndex(),
+                'wrapLeft' => self::WRAP_LEFT,
+                'wrapRight' => self::WRAP_RIGHT,
+                'min' => $this->min,
+                'max' => $this->max,
+                'displayIf' => $this->displayIf
             ],
         );
     }

@@ -1,23 +1,26 @@
 <template>
-  <div
+  <nested-form-icon
     @click="toggleVisibility"
-    class="block text-80 flex items-center justify-center hover:border-70 hover:text-70"
+    hover-color="info"
   >
     <icon
       class="cursor-pointer"
       type="view"
       viewBox="1 -1.5 20 20"
     />
-  </div>
+  </nested-form-icon>
 </template>
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Field } from '../../@types/Field'
 import { Child } from '../../@types/Child'
+import NestedFormIcon from './NestedFormIcon.vue'
 
-@Component
-export default class NestedFormVisibility extends Vue {
+@Component({
+  components: { NestedFormIcon }
+})
+export default class NestedFormView extends Vue {
   @Prop() public field: Field
   @Prop() public child: Child
   /**

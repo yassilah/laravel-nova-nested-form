@@ -1,40 +1,44 @@
 <template>
   <div class="relative">
-    <template v-if="field.children.length > 0">
-      <card
-        :class="{ 'overflow-hidden': field.panel && !index }"
-        class="my-4"
-        :key="index"
-        v-for="(child, index) in field.children"
-      >
-        <nested-form-header
-          :child="child"
-          :field="field"
-        />
-        <component
-          :is="getComponentName(field)"
-          :key="index"
-          v-bind="{ field }"
-          v-for="(field, index) in child.fields"
-          v-show="child.opened"
-        />
-      </card>
-    </template>
+    <template v-if="shouldDisplay()">
+      <template v-if="field.children.length > 0">
+        <card
+          :class="{ 'overflow-hidden': field.panel && !index }"
+          :key="childIndex"
+          v-for="(child, childIndex) in field.children"
+        >
+          <nested-form-header
+            :child="child"
+            :field="field"
+          />
+          <component
+            :conditions="conditions"
+            :index="childIndex"
+            :is="getComponentName(field)"
+            :key="fieldIndex"
+            :parent-index="index"
+            v-bind="{ field }"
+            v-for="(field, fieldIndex) in child.fields"
+            v-show="child.opened"
+          />
+        </card>
+      </template>
 
-    <div
-      class="flex flex-col p-8 items-center justify-center"
-      v-else
-    >
-      <p
-        class="text-center my-4 font-bold text-80 text-xl"
-      >{{__('No :pluralLabel yet.', { pluralLabel: field.pluralLabel })}}</p>
-      <nested-form-add :field="field" />
-    </div>
+      <div
+        class="flex flex-col p-8 items-center justify-center"
+        v-else
+      >
+        <p
+          class="text-center my-4 font-bold text-80 text-xl"
+        >{{__('No related :pluralLabel yet.', { pluralLabel: field.pluralLabel })}}</p>
+        <nested-form-add :field="field" />
+      </div>
+    </template>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Mixins, Prop } from 'vue-property-decorator'
+import { Component, Vue, Mixins, Prop, Watch } from 'vue-property-decorator'
 import { FormField, HandlesValidationErrors } from 'laravel-nova'
 
 @Component
@@ -45,6 +49,9 @@ export default class NestedFormField extends Mixins(
   @Prop() public resourceName!: string
   @Prop() public resourceId!: string | number
   @Prop() public field!: any
+  @Prop({ default: {} }) public conditions: any
+  @Prop() public index: number
+  @Prop() public parentIndex: number
 
   /**
    * Value.
@@ -73,10 +80,101 @@ export default class NestedFormField extends Mixins(
   }
 
   /**
+   * Whether the current form should be displayed.
+   */
+  public shouldDisplay() {
+    if (!this.field.displayIf) {
+      return true
+    }
+
+    let shouldDisplay: boolean[] = []
+
+    for (let i in this.field.displayIf) {
+      const {
+        attribute,
+        is,
+        isNot,
+        isNotNull,
+        isMoreThan,
+        isLessThan,
+        isMoreThanOrEqual,
+        isLessThanOrEqual
+      } = this.field.displayIf[i]
+
+      if (attribute) {
+        const values = Object.keys(this.conditions)
+          .filter(key => key.match(`^${attribute}$`))
+          .map(key => this.conditions[key])
+
+        if (typeof is !== 'undefined') {
+          shouldDisplay.push(values.every(v => v === is))
+        } else if (typeof isNot !== 'undefined') {
+          shouldDisplay.push(values.every(v => v !== is))
+        } else if (isNotNull) {
+          shouldDisplay.push(values.every(v => Boolean(v)))
+        } else if (typeof isMoreThan !== 'undefined') {
+          shouldDisplay.push(values.every(v => v > isMoreThan))
+        } else if (typeof isLessThan !== 'undefined') {
+          shouldDisplay.push(values.every(v => v < isLessThan))
+        } else if (typeof isMoreThanOrEqual !== 'undefined') {
+          shouldDisplay.push(values.every(v => v >= isMoreThanOrEqual))
+        } else if (typeof isLessThanOrEqual !== 'undefined') {
+          shouldDisplay.push(values.every(v => v <= isLessThanOrEqual))
+        }
+      }
+    }
+
+    return shouldDisplay.every(should => should)
+  }
+
+  /**
+   * Get all the fields of the instance.
+   */
+  public setAllAttributeWatchers(instance: any) {
+    if (
+      instance.fieldAttribute &&
+      typeof this.conditions[instance.fieldAttribute] === 'undefined'
+    ) {
+      this.field.displayIf
+        .filter(field => instance.fieldAttribute.match(`^${field.attribute}$`))
+        .forEach(field => {
+          this.$set(this.conditions, instance.fieldAttribute, instance.value)
+
+          instance.$watch('value', value => {
+            this.$set(this.conditions, instance.fieldAttribute, value)
+          })
+        })
+    }
+
+    if (instance.$children) {
+      instance.$children.map(child => this.setAllAttributeWatchers(child))
+    }
+  }
+
+  /**
    * Get component name.
    */
   public getComponentName(child) {
     return child.prefixComponent ? `form-${child.component}` : child.component
+  }
+
+  /**
+   * Set all the conditions.
+   */
+  @Watch('field.children')
+  public setConditions() {
+    if (this.field.displayIf) {
+      this.setAllAttributeWatchers(this.$root)
+    }
+  }
+
+  /**
+   * On mounted.
+   */
+  public mounted() {
+    if (this.field.displayIf) {
+      this.setConditions()
+    }
   }
 }
 </script>

@@ -1,9 +1,17 @@
 <template>
   <div class="bg-50 p-4 items-center text-90 flex justify-between">
-    <div v-html="child.heading" />
+    <div
+      v-html="heading"
+      v-if="heading"
+    />
     <div class="flex">
-      <nested-form-visibility
+      <nested-form-view
         :child="child"
+        class="mx-2"
+      />
+      <nested-form-remove
+        :child="child"
+        :field="field"
         class="mx-2"
       />
       <nested-form-add
@@ -20,15 +28,26 @@ import { Child } from '../../@types/Child'
 import { Field } from '../../@types/Field'
 
 @Component
-export default class Header extends Vue {
+export default class NestedFormHeader extends Vue {
   @Prop() public child: Child
   @Prop() public field: Field
 
   /**
-   * Toggle the visibility.
+   * Get the heading.
    */
-  public toggleVisibility() {
-    this.child.opened = !this.child.opened
+  get heading() {
+    return this.child.heading
+      ? this.child.heading.replace(
+          new RegExp(
+            `${this.field.wrapLeft}(.*?)(?:\\|(.*?))?${this.field.wrapRight}`,
+            'g'
+          ),
+          (match, name, defaultValue = '') => {
+            const field = this.child.fields.find(field => field.name === name)
+            return field ? field.value : defaultValue
+          }
+        )
+      : null
   }
 }
 </script>
