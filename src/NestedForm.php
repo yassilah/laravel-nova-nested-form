@@ -153,6 +153,19 @@ class NestedForm extends Field
      * @var Panel|Field|NestedForm
      */
     protected $returnContext;
+    /**
+     * Indicates if the element should be shown on the index view.
+     *
+     * @var \Closure|bool
+     */
+    public $showOnIndex = false;
+
+    /**
+     * Indicates if the element should be shown on the detail view.
+     *
+     * @var \Closure|bool
+     */
+    public $showOnDetail = false;
 
     /**
      * Create a new nested form.
