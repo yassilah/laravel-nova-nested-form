@@ -8,11 +8,12 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-
-@Component
-export default class NestedFormIcon extends Vue {
-  @Prop() public hoverColor: string
+<script>
+export default {
+  props: {
+    hoverColor: {
+      type: String
+    }
+  }
 }
 </script>

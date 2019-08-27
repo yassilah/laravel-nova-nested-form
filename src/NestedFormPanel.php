@@ -22,7 +22,7 @@ class NestedFormPanel extends Panel
 
         $this->nestedForm->asPanel($this);
 
-        parent::__construct(__('Related :resource', ['resource' => $this->nestedForm->name]), [$this->nestedForm]);
+        parent::__construct(__('Update Related :resource', ['resource' => $this->nestedForm->name]), [$this->nestedForm]);
     }
 
     /**

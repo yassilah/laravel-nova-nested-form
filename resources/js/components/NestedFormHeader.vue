@@ -22,32 +22,43 @@
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { Child } from '../../@types/Child'
-import { Field } from '../../@types/Field'
+<script>
+import NestedFormAdd from './NestedFormAdd'
+import NestedFormRemove from './NestedFormRemove'
+import NestedFormView from './NestedFormView'
 
-@Component
-export default class NestedFormHeader extends Vue {
-  @Prop() public child: Child
-  @Prop() public field: Field
-
-  /**
-   * Get the heading.
-   */
-  get heading() {
-    return this.child.heading
-      ? this.child.heading.replace(
-          new RegExp(
-            `${this.field.wrapLeft}(.*?)(?:\\|(.*?))?${this.field.wrapRight}`,
-            'g'
-          ),
-          (match, name, defaultValue = '') => {
-            const field = this.child.fields.find(field => field.name === name)
-            return field ? field.value : defaultValue
-          }
-        )
-      : null
+export default {
+  components: {
+    NestedFormView,
+    NestedFormAdd,
+    NestedFormRemove
+  },
+  props: {
+    child: {
+      type: Object
+    },
+    field: {
+      type: Object
+    }
+  },
+  computed: {
+    /**
+     * Get the heading.
+     */
+    heading() {
+      return this.child.heading
+        ? this.child.heading.replace(
+            new RegExp(
+              `${this.field.wrapLeft}(.*?)(?:\\|(.*?))?${this.field.wrapRight}`,
+              'g'
+            ),
+            (match, name, defaultValue = '') => {
+              const field = this.child.fields.find(field => field.name === name)
+              return field ? field.value : defaultValue
+            }
+          )
+        : null
+    }
   }
 }
 </script>

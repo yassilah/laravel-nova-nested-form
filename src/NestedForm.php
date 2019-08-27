@@ -44,6 +44,13 @@ class NestedForm extends Field
     const INDEX = 'INDEX';
 
     /**
+     * ID.
+     * 
+     * @var string
+     */
+    const ID = 'ID';
+
+    /**
      * The field's component.
      *
      * @var string
@@ -131,7 +138,7 @@ class NestedForm extends Field
     /**
      * Condition to display the nested form.
      */
-    public $displayIf;
+    public $displayIfCallback;
 
     /**
      * Return context
@@ -248,15 +255,33 @@ class NestedForm extends Field
      */
     public function displayIf(\Closure $displayIfCallback)
     {
-        $this->displayIf = collect(call_user_func($displayIfCallback, $this, app(Novarequest::class)))->map(function ($condition) {
-            if (isset($condition['attribute'])) {
-                $condition['attribute'] = static::conditional($condition['attribute']);
-            }
+        $this->displayIfCallback = function () use ($displayIfCallback) {
+            return collect(call_user_func($displayIfCallback, $this, app(Novarequest::class)))->map(function ($condition) {
+                if (isset($condition['attribute'])) {
+                    $condition['attribute'] = static::conditional($condition['attribute']);
+                }
 
-            return $condition;
-        });
+                return $condition;
+            });
+        };
 
         return $this->returnContext;
+    }
+
+    /**
+     * Get the relationship type.
+     */
+    protected function getRelationshipType()
+    {
+        return (new \ReflectionClass(Nova::modelInstanceForKey($this->viaResource)->{$this->viaRelationship}()))->getShortName();
+    }
+
+    /**
+     * Whether the current relationship if many or one.
+     */
+    protected function isManyRelationsip()
+    {
+        return str_contains($this->getRelationshipType(), 'Many');
     }
 
     /**
@@ -273,7 +298,7 @@ class NestedForm extends Field
             $children = collect($request->get($requestAttribute));
             $request->route()->setParameter('resource', $this->resourceName);
             $this->deleteChildren($request, $model, $children);
-            $this->createOrUpdateChildren($request, $model, $children, $this->getRelatedKeys($request));
+            $this->createOrUpdateChildren($request, $model, $children, $requestAttribute, $this->getRelatedKeys($request));
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
@@ -305,10 +330,10 @@ class NestedForm extends Field
         });
 
         if ($field instanceof MorphTo) {
-            return [$field->attribute => null, $field->attribute . '_type' => $this->viaResource];
+            return [$field->attribute => self::ID, $field->attribute . '_type' => $this->viaResource];
         }
 
-        return [$field->attribute => null];
+        return [$field->attribute => self::ID];
     }
 
     /**
@@ -348,15 +373,15 @@ class NestedForm extends Field
     /**
      * Create or update the children sent through the request.
      */
-    protected function createOrUpdateChildren(NovaRequest $request, $model, $children, $relatedKeys)
+    protected function createOrUpdateChildren(NovaRequest $request, $model, $children, $requestAttribute, $relatedKeys)
     {
-        $children->each(function ($child, $index) use ($request, $model, $relatedKeys) {
+        $children->each(function ($child, $index) use ($request, $model, $requestAttribute, $relatedKeys) {
             try {
                 if (isset($child[$this->keyName])) {
-                    return $this->updateChild($request, $model, $child, $relatedKeys);
+                    return $this->updateChild($request, $model, $child, $index, $requestAttribute, $relatedKeys);
                 }
 
-                return $this->createChild($request, $model, $child, $relatedKeys);
+                return $this->createChild($request, $model, $child, $index, $requestAttribute, $relatedKeys);
             } catch (ValidationException $exception) {
                 $this->throwValidationException($exception, $index);
             }
@@ -366,17 +391,17 @@ class NestedForm extends Field
     /**
      * Create the child sent through the request.
      */
-    protected function createChild(NovaRequest $request, $model, $child, $relatedKeys)
+    protected function createChild(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
-        return (new ResourceStoreController)->handle($this->getCreateRequest($request, $model, $child, $relatedKeys));
+        return (new ResourceStoreController)->handle($this->getCreateRequest($request, $model, $child, $index, $requestAttribute, $relatedKeys));
     }
 
     /**
      * Update the child sent through the request.
      */
-    protected function updateChild(NovaRequest $request, $model, $child, $relatedKeys)
+    protected function updateChild(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
-        return (new ResourceUpdateController)->handle($this->getUpdateRequest($request, $model, $child, $relatedKeys));
+        return (new ResourceUpdateController)->handle($this->getUpdateRequest($request, $model, $child, $index, $requestAttribute, $relatedKeys));
     }
 
     /**
@@ -392,23 +417,27 @@ class NestedForm extends Field
     /**
      * Get a request for create.
      */
-    protected function getCreateRequest(NovaRequest $request, $model, $child, $relatedKeys)
+    protected function getCreateRequest(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
-        return CreateResourceRequest::createFrom($request->replace([
+        $request = CreateResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
             'viaResourceId' => $model->id,
             'viaRelationship' => $this->viaRelationship
         ])->merge($child)->merge(collect($relatedKeys)->map(function ($value) use ($model) {
-            return is_null($value) ? $model->id : $value;
+            return $value === self::ID ? $model->id : $value;
         })->toArray()));
+
+        $request->files = collect($request->file($requestAttribute . '.' . $index));
+
+        return $request;
     }
 
     /**
      * Get a request for update.
      */
-    protected function getUpdateRequest(NovaRequest $request, $model, $child, $relatedKeys)
+    protected function getUpdateRequest(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
-        return UpdateResourceRequest::createFrom($this->getCreateRequest($request, $model, $child, $relatedKeys)->merge([
+        return UpdateResourceRequest::createFrom($this->getCreateRequest($request, $model, $child, $index, $requestAttribute, $relatedKeys)->merge([
             'resourceId' => $child[$this->keyName]
         ]));
     }
@@ -488,8 +517,8 @@ class NestedForm extends Field
                 'viaResource' => $this->viaResource,
                 'keyName' => $this->keyName,
                 'min' => $this->min,
-                'max' => $this->max,
-                'displayIf' => $this->displayIf
+                'max' => $this->isManyRelationsip() ? $this->max : 1,
+                'displayIf' => isset($this->displayIfCallback) ? call_user_func($this->displayIfCallback) : null
             ],
         );
     }

@@ -21,7 +21,6 @@
             :parent-index="index"
             :resource-id="child.resourceId"
             :resource-name="field.resourceName"
-            :via-relationship="field.viaRelationship"
             :via-resource="field.viaResource"
             :via-resource-id="field.viaResourceId"
             @file-deleted="$emit('file-deleted')"
@@ -41,163 +40,193 @@
         <nested-form-add :field="field" />
       </div>
     </template>
+
+    <div
+      class="flex flex-col p-8 items-center justify-center"
+      v-else
+    >
+      <p
+        class="text-center my-4 font-bold text-80 text-xl"
+      >{{__('You cannot add :pluralLabel.', { pluralLabel: field.pluralLabel })}}</p>
+    </div>
   </div>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Mixins, Prop, Watch } from 'vue-property-decorator'
+<script >
 import { FormField, HandlesValidationErrors } from 'laravel-nova'
+import NestedFormAdd from './NestedFormAdd'
+import NestedFormHeader from './NestedFormHeader'
 
-@Component
-export default class NestedFormField extends Mixins(
-  FormField,
-  HandlesValidationErrors
-) {
-  @Prop() public resourceName!: string
-  @Prop() public resourceId!: string | number
-  @Prop() public field!: any
-  @Prop({ default: () => ({}) }) public conditions: any
-  @Prop() public index: number
-  @Prop() public parentIndex: number
+export default {
+  mixins: [FormField, HandlesValidationErrors],
 
-  /**
-   * Value.
-   */
-  public value: any = ''
+  components: {
+    NestedFormAdd,
+    NestedFormHeader
+  },
 
-  /*
-   * Set the initial, internal value for the field.
-   */
-  public setInitialValue() {
-    this.value = this.field.value || ''
-  }
-
-  /**
-   * Fill the given FormData object with the field's internal value.
-   */
-  public fill(formData) {
-    this.field.children.forEach(child => {
-      if (child[this.field.keyName]) {
-        formData.append(
-          `${child.attribute}[${this.field.keyName}]`,
-          child[this.field.keyName]
-        )
-      }
-      child.fields.forEach(field => field.fill(formData))
-    })
-
-    const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/
-
-    for (const [key, value] of formData.entries()) {
-      if (key.match(regex)) {
-        formData.append(key.replace(regex, '$1$2$3]'), value)
-        formData.delete(key)
-      }
+  props: {
+    resourceName: {
+      type: String,
+      required: true
+    },
+    resourceId: {
+      type: String | Number,
+      required: true
+    },
+    field: {
+      type: Object,
+      required: true
+    },
+    conditions: {
+      type: Object,
+      default: () => ({})
+    },
+    index: {
+      type: Number,
+      required: true
+    },
+    parentIndex: {
+      type: Number
     }
-  }
+  },
+  methods: {
+    /**
+     * Fill the given FormData object with the field's internal value.
+     */
+    fill(formData) {
+      this.field.children.forEach(child => {
+        if (child[this.field.keyName]) {
+          formData.append(
+            `${child.attribute}[${this.field.keyName}]`,
+            child[this.field.keyName]
+          )
+        }
+        child.fields.forEach(field => field.fill(formData))
+      })
 
-  /**
-   * Update the field's internal value.
-   */
-  public handleChange(value) {
-    this.value = value
-  }
+      const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/
 
-  /**
-   * Whether the current form should be displayed.
-   */
-  public shouldDisplay() {
-    if (!this.field.displayIf) {
-      return true
-    }
-
-    let shouldDisplay: boolean[] = []
-
-    for (let i in this.field.displayIf) {
-      const {
-        attribute,
-        is,
-        isNot,
-        isNotNull,
-        isMoreThan,
-        isLessThan,
-        isMoreThanOrEqual,
-        isLessThanOrEqual,
-        includes
-      } = this.field.displayIf[i]
-
-      if (attribute) {
-        const values = Object.keys(this.conditions)
-          .filter(key => key.match(`^${attribute}$`))
-          .map(key => this.conditions[key])
-
-        if (typeof is !== 'undefined') {
-          shouldDisplay.push(values.every(v => v === is))
-        } else if (typeof isNot !== 'undefined') {
-          shouldDisplay.push(values.every(v => v !== is))
-        } else if (isNotNull) {
-          shouldDisplay.push(values.every(v => Boolean(v)))
-        } else if (typeof isMoreThan !== 'undefined') {
-          shouldDisplay.push(values.every(v => v > isMoreThan))
-        } else if (typeof isLessThan !== 'undefined') {
-          shouldDisplay.push(values.every(v => v < isLessThan))
-        } else if (typeof isMoreThanOrEqual !== 'undefined') {
-          shouldDisplay.push(values.every(v => v >= isMoreThanOrEqual))
-        } else if (typeof isLessThanOrEqual !== 'undefined') {
-          shouldDisplay.push(values.every(v => v <= isLessThanOrEqual))
-        } else if (includes) {
-          shouldDisplay.push(values.every(v => v && includes.includes(v)))
+      for (const [key, value] of formData.entries()) {
+        if (key.match(regex)) {
+          formData.append(key.replace(regex, '$1$2$3]'), value)
+          formData.delete(key)
         }
       }
-    }
+    },
 
-    return shouldDisplay.every(should => should)
-  }
+    /**
+     * Update the field's internal value.
+     */
+    handleChange(value) {
+      this.value = value
+    },
 
-  /**
-   * Get all the fields of the instance.
-   */
-  public setAllAttributeWatchers(instance: any) {
-    if (
-      instance.fieldAttribute &&
-      typeof this.conditions[instance.fieldAttribute] === 'undefined'
-    ) {
-      this.field.displayIf
-        .filter(field => instance.fieldAttribute.match(`^${field.attribute}$`))
-        .forEach(field => {
-          this.$set(this.conditions, instance.fieldAttribute, instance.value)
-          instance.$watch('value', value => {
-            this.$set(this.conditions, instance.fieldAttribute, value)
+    /**
+     * Whether the current form should be displayed.
+     */
+    shouldDisplay() {
+      if (!this.field.displayIf) {
+        return true
+      }
+
+      let shouldDisplay = []
+
+      for (let i in this.field.displayIf) {
+        const {
+          attribute,
+          is,
+          isNot,
+          isNotNull,
+          isMoreThan,
+          isLessThan,
+          isMoreThanOrEqual,
+          isLessThanOrEqual,
+          includes
+        } = this.field.displayIf[i]
+
+        if (attribute) {
+          const values = Object.keys(this.conditions)
+            .filter(key => key.match(`^${attribute}$`))
+            .map(key => this.conditions[key])
+
+          if (typeof is !== 'undefined') {
+            shouldDisplay.push(values.every(v => v === is))
+          } else if (typeof isNot !== 'undefined') {
+            shouldDisplay.push(values.every(v => v !== is))
+          } else if (isNotNull) {
+            shouldDisplay.push(values.every(v => Boolean(v)))
+          } else if (typeof isMoreThan !== 'undefined') {
+            shouldDisplay.push(values.every(v => v > isMoreThan))
+          } else if (typeof isLessThan !== 'undefined') {
+            shouldDisplay.push(values.every(v => v < isLessThan))
+          } else if (typeof isMoreThanOrEqual !== 'undefined') {
+            shouldDisplay.push(values.every(v => v >= isMoreThanOrEqual))
+          } else if (typeof isLessThanOrEqual !== 'undefined') {
+            shouldDisplay.push(values.every(v => v <= isLessThanOrEqual))
+          } else if (includes) {
+            shouldDisplay.push(values.every(v => v && includes.includes(v)))
+          }
+        }
+      }
+
+      return shouldDisplay.every(should => should)
+    },
+    /**
+     * Get all the fields of the instance.
+     */
+    setAllAttributeWatchers(instance) {
+      if (
+        instance.fieldAttribute &&
+        typeof this.conditions[instance.fieldAttribute] === 'undefined'
+      ) {
+        this.field.displayIf
+          .filter(field =>
+            instance.fieldAttribute.match(`^${field.attribute}$`)
+          )
+          .forEach(field => {
+            const keyToWatch = instance.selectedResourceId
+              ? 'selectedResourceId'
+              : 'value'
+
+            this.$set(
+              this.conditions,
+              instance.fieldAttribute,
+              instance[keyToWatch]
+            )
+
+            instance.$watch(keyToWatch, keyToWatch => {
+              this.$set(this.conditions, instance.fieldAttribute, keyToWatch)
+            })
           })
-        })
+      }
+
+      if (instance.$children) {
+        instance.$children.map(child => this.setAllAttributeWatchers(child))
+      }
+    },
+
+    /**
+     * Get component name.
+     */
+    getComponentName(child) {
+      return child.prefixComponent ? `form-${child.component}` : child.component
+    },
+
+    setConditions() {
+      if (this.field.displayIf) {
+        this.setAllAttributeWatchers(this.$root)
+      }
     }
+  },
 
-    if (instance.$children) {
-      instance.$children.map(child => this.setAllAttributeWatchers(child))
+  watch: {
+    'field.children'() {
+      this.setConditions()
     }
-  }
+  },
 
-  /**
-   * Get component name.
-   */
-  public getComponentName(child) {
-    return child.prefixComponent ? `form-${child.component}` : child.component
-  }
-
-  /**
-   * Set all the conditions.
-   */
-  @Watch('field.children')
-  public setConditions() {
-    if (this.field.displayIf) {
-      this.setAllAttributeWatchers(this.$root)
-    }
-  }
-
-  /**
-   * On mounted.
-   */
-  public mounted() {
+  mounted() {
     if (this.field.displayIf) {
       this.setConditions()
     }

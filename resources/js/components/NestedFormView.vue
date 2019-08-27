@@ -11,23 +11,32 @@
   </nested-form-icon>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { Field } from '../../@types/Field'
-import { Child } from '../../@types/Child'
+<script>
+import NestedFormIcon from './NestedFormIcon'
 
-@Component
-export default class NestedFormView extends Vue {
-  @Prop() public field: Field
-  @Prop() public child: Child
-  /**
-   * Toggle the visibility.
-   */
-  public toggleVisibility() {
-    if (this.child) {
-      this.child.opened = !this.child.opened
-    } else if (this.field) {
-      this.field.children.forEach(child => (child.opened = !child.opened))
+export default {
+  components: { NestedFormIcon },
+
+  props: {
+    field: {
+      type: Object
+    },
+
+    child: {
+      type: Object
+    }
+  },
+
+  methods: {
+    /**
+     * Toggle the visibility.
+     */
+    toggleVisibility() {
+      if (this.child) {
+        this.child.opened = !this.child.opened
+      } else if (this.field) {
+        this.field.children.forEach(child => (child.opened = !child.opened))
+      }
     }
   }
 }

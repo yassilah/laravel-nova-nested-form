@@ -12,21 +12,31 @@
   </nested-form-icon>
 </template>
 
-<script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator'
-import { Field } from '../../@types/Field'
-import { Child } from '../../@types/Child'
+<script>
+import NestedFormIcon from './NestedFormIcon'
 
-@Component
-export default class NestedFormRemove extends Vue {
-  @Prop() public field!: Field
-  @Prop() public child!: Child
+export default {
+  components: { NestedFormIcon },
 
-  /**
-   * Remove a child.
-   */
-  public removeChild() {
-    this.field.children.splice(this.field.children.indexOf(this.child), 1)
+  props: {
+    field: {
+      type: Object,
+      required: true
+    },
+
+    child: {
+      type: Object,
+      required: true
+    }
+  },
+
+  methods: {
+    /**
+     * Remove a child.
+     */
+    removeChild() {
+      this.field.children.splice(this.field.children.indexOf(this.child), 1)
+    }
   }
 }
 </script>
