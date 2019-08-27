@@ -6,18 +6,23 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Nova\Fields\BelongsTo;
+use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\ResourceRelationshipGuesser;
 use Laravel\Nova\Http\Controllers\ResourceDestroyController;
+use Laravel\Nova\Http\Controllers\ResourceDetachController;
 use Laravel\Nova\Http\Controllers\ResourceStoreController;
 use Laravel\Nova\Http\Controllers\ResourceUpdateController;
 use Laravel\Nova\Http\Requests\CreateResourceRequest;
 use Laravel\Nova\Http\Requests\DeleteResourceRequest;
+use Laravel\Nova\Http\Requests\DetachResourceRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Panel;
+
+use function GuzzleHttp\json_encode;
 
 class NestedForm extends Field
 {
@@ -153,19 +158,6 @@ class NestedForm extends Field
      * @var Panel|Field|NestedForm
      */
     protected $returnContext;
-    /**
-     * Indicates if the element should be shown on the index view.
-     *
-     * @var \Closure|bool
-     */
-    public $showOnIndex = false;
-
-    /**
-     * Indicates if the element should be shown on the detail view.
-     *
-     * @var \Closure|bool
-     */
-    public $showOnDetail = false;
 
     /**
      * Create a new nested form.
@@ -327,10 +319,11 @@ class NestedForm extends Field
     protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
     {
         if ($model->exists) {
-            $children = collect($request->get($requestAttribute));
-            $request->route()->setParameter('resource', $this->resourceName);
-            $this->deleteChildren($request, $model, $children);
-            $this->createOrUpdateChildren($request, $model, $children, $requestAttribute, $this->getRelatedKeys($request));
+            $newRequest = NovaRequest::createFrom($request);
+            $children = collect($newRequest->get($requestAttribute));
+            $newRequest->route()->setParameter('resource', $this->resourceName);
+            $this->deleteChildren($newRequest, $model, $children);
+            $this->createOrUpdateChildren($newRequest, $model, $children, $requestAttribute, $this->getRelatedKeys($newRequest));
         } else {
             $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
                 $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
@@ -343,7 +336,7 @@ class NestedForm extends Field
      */
     public function isRelatedField($field)
     {
-        if ($field instanceof BelongsTo) {
+        if ($field instanceof BelongsTo || $field instanceof BelongsToMany) {
             return $field->resourceName === $this->viaResource;
         } else if ($field instanceof MorphTo) {
             return collect($field->morphToTypes)->pluck('value')->contains($this->viaResource);
@@ -362,7 +355,7 @@ class NestedForm extends Field
         });
 
         if (!$field) {
-            throw new \Exception(__('A BelongsTo or MorphTo field needs to be set on your related resource.'));
+            throw new \Exception(__('A field defining the inverse relationship needs to be set on your related resource (e.g. MorphTo, BelongsTo, BelongsToMany...)'));
         }
 
         if ($field instanceof MorphTo) {
@@ -403,6 +396,10 @@ class NestedForm extends Field
      */
     protected function deleteChildren(NovaRequest $request, $model, $children)
     {
+        if ($this->getRelationshipType() === 'BelongsToMany') {
+            return (new ResourceDetachController)->handle($this->getDetachRequest($request, $model, $children));
+        }
+
         return (new ResourceDestroyController)->handle($this->getDeleteRequest($request, $model, $children));
     }
 
@@ -438,6 +435,19 @@ class NestedForm extends Field
     protected function updateChild(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
         return (new ResourceUpdateController)->handle($this->getUpdateRequest($request, $model, $child, $index, $requestAttribute, $relatedKeys));
+    }
+
+    /**
+     * Get a request for detach.
+     */
+    protected function getDetachRequest(NovaRequest $request, $model, $children)
+    {
+        return DetachResourceRequest::createFrom($request->replace([
+            'viaResource' => $this->viaResource,
+            'viaResourceId' => $model->id,
+            'viaRelationship' => $this->viaRelationship,
+            'resources' => $model->{$this->viaRelationship}()->select($this->attribute . '.' . $this->keyName)->whereNotIn($this->attribute . '.' . $this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
+        ]));
     }
 
     /**
