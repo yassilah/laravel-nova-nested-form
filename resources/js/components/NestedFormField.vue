@@ -13,12 +13,19 @@
           />
           <component
             :conditions="conditions"
+            :errors="errors"
+            :field="childField"
             :index="childIndex"
-            :is="getComponentName(field)"
-            :key="fieldIndex"
+            :is="getComponentName(childField)"
+            :key="childFieldIndex"
             :parent-index="index"
-            v-bind="{ field }"
-            v-for="(field, fieldIndex) in child.fields"
+            :resource-id="child.resourceId"
+            :resource-name="field.resourceName"
+            :via-relationship="field.viaRelationship"
+            :via-resource="field.viaResource"
+            :via-resource-id="field.viaResourceId"
+            @file-deleted="$emit('file-deleted')"
+            v-for="(childField, childFieldIndex) in child.fields"
             v-show="child.opened"
           />
         </card>
@@ -49,7 +56,7 @@ export default class NestedFormField extends Mixins(
   @Prop() public resourceName!: string
   @Prop() public resourceId!: string | number
   @Prop() public field!: any
-  @Prop({ default: {} }) public conditions: any
+  @Prop({ default: () => ({}) }) public conditions: any
   @Prop() public index: number
   @Prop() public parentIndex: number
 
@@ -69,7 +76,24 @@ export default class NestedFormField extends Mixins(
    * Fill the given FormData object with the field's internal value.
    */
   public fill(formData) {
-    formData.append(this.field.attribute, this.value || '')
+    this.field.children.forEach(child => {
+      if (child[this.field.keyName]) {
+        formData.append(
+          `${child.attribute}[${this.field.keyName}]`,
+          child[this.field.keyName]
+        )
+      }
+      child.fields.forEach(field => field.fill(formData))
+    })
+
+    const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/
+
+    for (const [key, value] of formData.entries()) {
+      if (key.match(regex)) {
+        formData.append(key.replace(regex, '$1$2$3]'), value)
+        formData.delete(key)
+      }
+    }
   }
 
   /**
@@ -98,7 +122,8 @@ export default class NestedFormField extends Mixins(
         isMoreThan,
         isLessThan,
         isMoreThanOrEqual,
-        isLessThanOrEqual
+        isLessThanOrEqual,
+        includes
       } = this.field.displayIf[i]
 
       if (attribute) {
@@ -120,6 +145,8 @@ export default class NestedFormField extends Mixins(
           shouldDisplay.push(values.every(v => v >= isMoreThanOrEqual))
         } else if (typeof isLessThanOrEqual !== 'undefined') {
           shouldDisplay.push(values.every(v => v <= isLessThanOrEqual))
+        } else if (includes) {
+          shouldDisplay.push(values.every(v => v && includes.includes(v)))
         }
       }
     }
@@ -139,7 +166,6 @@ export default class NestedFormField extends Mixins(
         .filter(field => instance.fieldAttribute.match(`^${field.attribute}$`))
         .forEach(field => {
           this.$set(this.conditions, instance.fieldAttribute, instance.value)
-
           instance.$watch('value', value => {
             this.$set(this.conditions, instance.fieldAttribute, value)
           })

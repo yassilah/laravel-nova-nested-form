@@ -15,11 +15,8 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Field } from '../../@types/Field'
-import NestedFormIcon from './NestedFormIcon.vue'
 
-@Component({
-  components: { NestedFormIcon }
-})
+@Component
 export default class NestedFormAdd extends Vue {
   @Prop() public field!: Field
 

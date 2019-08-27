@@ -9,4 +9,9 @@ export class Field {
   name: string
   min: number
   max: number
+  resourceId: string | number
+  resourceName: string
+  viaRelationship: string
+  viaResource: string
+  viaResourceId: string | number
 }

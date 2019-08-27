@@ -16,11 +16,8 @@
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import { Field } from '../../@types/Field'
 import { Child } from '../../@types/Child'
-import NestedFormIcon from './NestedFormIcon.vue'
 
-@Component({
-  components: { NestedFormIcon }
-})
+@Component
 export default class NestedFormRemove extends Vue {
   @Prop() public field!: Field
   @Prop() public child!: Child

@@ -4,6 +4,10 @@
     "target": "esnext",
     "noImplicitAny": false,
     "sourceMap": false,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./vendor/laravel/nova/resources/js/*"]
+    }
   }
 }

@@ -2,11 +2,20 @@
 
 namespace Yassi\NestedForm;
 
-use App\Nova\Resource;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Fields\ResourceRelationshipGuesser;
+use Laravel\Nova\Http\Controllers\ResourceDestroyController;
+use Laravel\Nova\Http\Controllers\ResourceStoreController;
+use Laravel\Nova\Http\Controllers\ResourceUpdateController;
+use Laravel\Nova\Http\Requests\CreateResourceRequest;
+use Laravel\Nova\Http\Requests\DeleteResourceRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Laravel\Nova\Nova;
 use Laravel\Nova\Panel;
 
@@ -81,7 +90,15 @@ class NestedForm extends Field
      * 
      * @var string
      */
-    public $fromResource;
+    public $viaResource;
+
+    /**
+     * Key name.
+     * 
+     * @var string
+     */
+    public $keyName;
+
 
     /**
      * Whether the form should be opened by default.
@@ -117,12 +134,11 @@ class NestedForm extends Field
     public $displayIf;
 
     /**
-     * Panel instance: this is the panel within which 
-     * the current nested form will be displayed.
+     * Return context
      * 
-     * @var Panel
+     * @var Panel|Field|NestedForm
      */
-    protected $panelInstance;
+    protected $returnContext;
 
     /**
      * Create a new nested form.
@@ -142,10 +158,9 @@ class NestedForm extends Field
         $this->viaRelationship = $this->attribute;
         $this->singularLabel = Str::singular($this->name);
         $this->pluralLabel = Str::plural($this->name);
-
-        $request = app(NovaRequest::class);
-
-        $this->fromResource = $request->route('resource');
+        $this->keyName = (new $this->resourceClass::$model)->getKeyName();
+        $this->viaResource = app(NovaRequest::class)->route('resource');
+        $this->returnContext = $this;
     }
 
     /**
@@ -159,11 +174,28 @@ class NestedForm extends Field
     public function resolve($resource, $attribute = null)
     {
         $this->withMeta([
-            'children' => $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
-                return NestedFormChild::make($model, $index, $this);
-            })->all(),
-            'schema' => NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this)
+            'children' => $this->children($resource),
+            'schema' => $this->schema($resource),
+            'viaResourceId' => $resource->{$resource->getKeyName()},
         ]);
+    }
+
+    /**
+     * Get the schema.
+     */
+    public function schema($resource)
+    {
+        return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+    }
+
+    /**
+     * Get the children.
+     */
+    public function children($resource)
+    {
+        return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
+            return NestedFormChild::make($model, $index, $this);
+        })->all();
     }
 
 
@@ -176,7 +208,7 @@ class NestedForm extends Field
     {
         $this->heading = $heading;
 
-        return $this->panelInstance ?? $this;
+        return $this->returnContext;
     }
 
     /**
@@ -188,7 +220,7 @@ class NestedForm extends Field
     {
         $this->opened = $opened;
 
-        return $this->panelInstance ?? $this;
+        return $this->returnContext;
     }
 
     /**
@@ -198,7 +230,7 @@ class NestedForm extends Field
     {
         $this->max = $max;
 
-        return $this->panelInstance ?? $this;
+        return $this->returnContext;
     }
 
     /**
@@ -208,7 +240,7 @@ class NestedForm extends Field
     {
         $this->min = $min;
 
-        return $this->panelInstance ?? $this;
+        return $this->returnContext;
     }
 
     /**
@@ -224,15 +256,177 @@ class NestedForm extends Field
             return $condition;
         });
 
-        return $this->panelInstance ?? $this;
+        return $this->returnContext;
+    }
+
+    /**
+     * Fills the attributes of the model within the container if the dependencies for the container are satisfied.
+     *
+     * @param NovaRequest $request
+     * @param string $requestAttribute
+     * @param object $model
+     * @param string $attribute
+     */
+    protected function fillAttributeFromRequest(NovaRequest $request, $requestAttribute, $model, $attribute)
+    {
+        if ($model->exists) {
+            $children = collect($request->get($requestAttribute));
+            $request->route()->setParameter('resource', $this->resourceName);
+            $this->deleteChildren($request, $model, $children);
+            $this->createOrUpdateChildren($request, $model, $children, $this->getRelatedKeys($request));
+        } else {
+            $model::saved(function ($model) use ($request, $requestAttribute, $attribute) {
+                $this->fillAttributeFromRequest($request, $requestAttribute, $model, $attribute);
+            });
+        }
+    }
+
+    /**
+     * Reject related fields.
+     */
+    public function isRelatedField($field)
+    {
+        if ($field instanceof BelongsTo) {
+            return $field->resourceName === $this->viaResource;
+        } else if ($field instanceof MorphTo) {
+            return collect($field->morphToTypes)->pluck('value')->contains($this->viaResource);
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the related key name for filling the attribute.
+     */
+    protected function getRelatedKeys(NovaRequest $request)
+    {
+        $field = collect(Nova::resourceInstanceForKey($this->resourceName)->fields($request))->first(function ($field) {
+            return $this->isRelatedField($field);
+        });
+
+        if ($field instanceof MorphTo) {
+            return [$field->attribute => null, $field->attribute . '_type' => $this->viaResource];
+        }
+
+        return [$field->attribute => null];
+    }
+
+    /**
+     * Throw validation exception with correct attributes.
+     */
+    protected function throwValidationException(ValidationException $exception, int $index)
+    {
+        throw $exception::withMessages($this->getValidationErrors($exception, $index));
+    }
+
+    /**
+     * Get validation errors with correct attributes.
+     */
+    protected function getValidationErrors(ValidationException $exception, int $index)
+    {
+        return collect($exception->errors())->mapWithKeys(function ($value, $key) use ($index) {
+            return [$this->getValidationErrorAttribute($index, $key) => $value];
+        })->toArray();
+    }
+
+    /**
+     * Get validation error attribute.
+     */
+    protected function getValidationErrorAttribute(int $index, string $key)
+    {
+        return preg_replace('/(?<=\])((?!\[).+?(?!\]))(?=\[|$)/', '[$1]', $this->attribute . '[' . $index . ']' . $key);
+    }
+
+    /**
+     * Delete the children not sent through the request.
+     */
+    protected function deleteChildren(NovaRequest $request, $model, $children)
+    {
+        return (new ResourceDestroyController)->handle($this->getDeleteRequest($request, $model, $children));
+    }
+
+    /**
+     * Create or update the children sent through the request.
+     */
+    protected function createOrUpdateChildren(NovaRequest $request, $model, $children, $relatedKeys)
+    {
+        $children->each(function ($child, $index) use ($request, $model, $relatedKeys) {
+            try {
+                if (isset($child[$this->keyName])) {
+                    return $this->updateChild($request, $model, $child, $relatedKeys);
+                }
+
+                return $this->createChild($request, $model, $child, $relatedKeys);
+            } catch (ValidationException $exception) {
+                $this->throwValidationException($exception, $index);
+            }
+        });
+    }
+
+    /**
+     * Create the child sent through the request.
+     */
+    protected function createChild(NovaRequest $request, $model, $child, $relatedKeys)
+    {
+        return (new ResourceStoreController)->handle($this->getCreateRequest($request, $model, $child, $relatedKeys));
+    }
+
+    /**
+     * Update the child sent through the request.
+     */
+    protected function updateChild(NovaRequest $request, $model, $child, $relatedKeys)
+    {
+        return (new ResourceUpdateController)->handle($this->getUpdateRequest($request, $model, $child, $relatedKeys));
+    }
+
+    /**
+     * Get a request for delete.
+     */
+    protected function getDeleteRequest(NovaRequest $request, $model, $children)
+    {
+        return DeleteResourceRequest::createFrom($request->replace([
+            'resources' => $model->{$this->viaRelationship}()->whereNotIn($this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
+        ]));
+    }
+
+    /**
+     * Get a request for create.
+     */
+    protected function getCreateRequest(NovaRequest $request, $model, $child, $relatedKeys)
+    {
+        return CreateResourceRequest::createFrom($request->replace([
+            'viaResource' => $this->viaResource,
+            'viaResourceId' => $model->id,
+            'viaRelationship' => $this->viaRelationship
+        ])->merge($child)->merge(collect($relatedKeys)->map(function ($value) use ($model) {
+            return is_null($value) ? $model->id : $value;
+        })->toArray()));
+    }
+
+    /**
+     * Get a request for update.
+     */
+    protected function getUpdateRequest(NovaRequest $request, $model, $child, $relatedKeys)
+    {
+        return UpdateResourceRequest::createFrom($this->getCreateRequest($request, $model, $child, $relatedKeys)->merge([
+            'resourceId' => $child[$this->keyName]
+        ]));
     }
 
     /**
      * Set the panel instance.
      */
-    public function setPanelInstance(Panel $panel)
+    public function asPanel(Panel $panel)
     {
-        $this->panelInstance = $panel;
+        $this->returnContext = $panel;
+    }
+
+    /**
+     * Set the field instance.
+     */
+    public function asField(Field $field)
+    {
+        $this->returnContext = $field;
     }
 
     /**
@@ -263,7 +457,7 @@ class NestedForm extends Field
      */
     public static function conditional(string $attribute)
     {
-        return preg_replace('/\.\$\./', '.' . static::wrapIndex() . '.', preg_replace('/\.\*\./', '\.[0-9]+\.', $attribute));
+        return preg_replace('/\.(.*?)(?=\.|$)/', '\[$1\]', preg_replace('/\.\$\./', '.' . static::wrapIndex() . '.', preg_replace('/\.\*\./', '\.[0-9]+\.', $attribute)));
     }
 
     /**
@@ -289,6 +483,10 @@ class NestedForm extends Field
                 'indexKey' => static::wrapIndex(),
                 'wrapLeft' => self::WRAP_LEFT,
                 'wrapRight' => self::WRAP_RIGHT,
+                'resourceName' => $this->resourceName,
+                'viaRelationship' => $this->viaRelationship,
+                'viaResource' => $this->viaResource,
+                'keyName' => $this->keyName,
                 'min' => $this->min,
                 'max' => $this->max,
                 'displayIf' => $this->displayIf

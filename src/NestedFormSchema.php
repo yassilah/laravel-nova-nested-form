@@ -3,16 +3,14 @@
 namespace Yassi\NestedForm;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Resources\MergeValue;
-use Illuminate\Support\Facades\Request;
 use JsonSerializable;
 use Laravel\Nova\Fields\BelongsTo;
-use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Field;
+use Laravel\Nova\Fields\File;
+use Laravel\Nova\Fields\MorphTo;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Panel;
 use ReflectionMethod;
-use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
-use Symfony\Component\Routing\Route;
 
 class NestedFormSchema implements JsonSerializable
 {
@@ -38,6 +36,11 @@ class NestedFormSchema implements JsonSerializable
     protected $index;
 
     /**
+     * List of fields.
+     */
+    public $fields;
+
+    /**
      * Name of the fields' fitler method.
      * 
      * @var string
@@ -53,6 +56,7 @@ class NestedFormSchema implements JsonSerializable
         $this->index = $index;
         $this->parentForm = $parentForm;
         $this->request = app(NovaRequest::class);
+        $this->fields = $this->fields();
     }
 
     /**
@@ -64,33 +68,48 @@ class NestedFormSchema implements JsonSerializable
         $this->request->route()->setParameter('resource', $this->parentForm->resourceName);
 
         $fields = $this->filterFields()->map(function ($field) {
-            $field->withMeta([
-                'attribute' => $this->attribute($field->attribute)
-            ]);
-
-            if (!($field instanceof NestedForm)) {
+            if ($field instanceof NestedForm) {
+                $field->attribute = $this->attribute($field->attribute);
+            } else {
                 $field->withMeta([
-                    'original_attribute' => $field->attribute
+                    'attribute' => $this->attribute($field->attribute),
+                    'originalAttribute' => $field->attribute
                 ]);
             }
 
             $field->resolve($this->model);
 
-            return $field->jsonSerialize();
+            return $this->setComponent($field)->jsonSerialize();
         })->values();
 
 
-        $this->request->route()->setParameter('resource', $this->parentForm->fromResource);
+        $this->request->route()->setParameter('resource', $this->parentForm->viaResource);
 
         return $fields;
+    }
+
+    /**
+     * Set the custom component if need be.
+     */
+    protected function setComponent(Field $field)
+    {
+        if ($field instanceof BelongsTo) {
+            $field->component = 'nested-form-belongs-to-field';
+        } else if ($field instanceof File) {
+            $field->component = 'nested-form-file-field';
+        } else if ($field instanceof MorphTo) {
+            $field->component = 'nested-form-morph-to-field';
+        }
+
+        return $field;
     }
 
     /*
      * Turn an attribute into a nested attribute.
      */
-    protected function attribute(string $attribute)
+    protected function attribute(string $attribute = null)
     {
-        return $this->parentForm->attribute . '.' . $this->index .  '.' . $attribute;
+        return $this->parentForm->attribute . '[' . $this->index .  ']' . ($attribute ? '[' . $attribute . ']' : '');
     }
 
     /**
@@ -115,7 +134,7 @@ class NestedFormSchema implements JsonSerializable
 
         return $method->invoke($this->resourceInstance(), $this->request, collect($this->resourceInstance()->fields($this->request))
             ->reject(function ($field) {
-                return $field instanceof BelongsTo && $field->resourceName === $this->parentForm->fromResource;
+                return $this->parentForm->isRelatedField($field);
             })->map(function ($field) {
                 if ($field instanceof Panel) {
                     return collect($field->data)->map(function ($field) {
@@ -152,9 +171,10 @@ class NestedFormSchema implements JsonSerializable
     public function jsonSerialize()
     {
         return [
-            'fields' => $this->fields(),
+            'fields' => $this->fields,
             'heading' => $this->heading(),
-            'opened' => $this->parentForm->opened
+            'opened' => $this->parentForm->opened,
+            'attribute' => $this->attribute()
         ];
     }
 }
