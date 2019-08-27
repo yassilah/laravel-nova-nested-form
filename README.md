@@ -144,7 +144,7 @@ NestedForm::make('Posts')->open(true),
 You can modify the default heading using the heading() method. You can use the helper method **wrapIndex()** to add the current child index to your header.
 
 ```php
-NestedForm::make('Posts')->heading(NestedForm::wrapIndex() . ' // ' . Post'),
+NestedForm::make('Posts')->heading(NestedForm::wrapIndex() . ' // Post'),
 ```
 
 You can also add any attribute of the current child into your heading using the helper method **wrapAttribute()**.
