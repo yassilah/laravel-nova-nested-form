@@ -117,9 +117,17 @@ class NestedFormSchema implements JsonSerializable
      */
     protected function heading()
     {
-        $heading = isset($this->parentForm->heading) ? $this->parentForm->heading : $this->parentForm::wrapIndex() . '. ' . $this->parentForm->singularLabel;
+        $heading = isset($this->parentForm->heading) ? $this->parentForm->heading : $this->defaultHeading();
 
         return str_replace($this->parentForm::wrapIndex(), $this->index, $heading);
+    }
+
+    /**
+     * Default heading.
+     */
+    protected function defaultHeading()
+    {
+        return $this->parentForm::wrapIndex() . $this->parentForm->separator . ' ' . $this->parentForm->singularLabel;
     }
 
     /**

@@ -52,8 +52,10 @@ export default {
               `${this.field.wrapLeft}(.*?)(?:\\|(.*?))?${this.field.wrapRight}`,
               'g'
             ),
-            (match, name, defaultValue = '') => {
-              const field = this.child.fields.find(field => field.name === name)
+            (match, attribute, defaultValue = '') => {
+              const field = this.child.fields.find(
+                field => field.originalAttribute === attribute
+              )
               return field ? field.value : defaultValue
             }
           )

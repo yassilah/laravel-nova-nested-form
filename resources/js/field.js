@@ -1,4 +1,3 @@
-import 'reflect-metadata'
 import NestedFormField from './components/NestedFormField'
 import NestedFormBelongsToField from './components/CustomFields/BelongsToField'
 import NestedFormFileField from './components/CustomFields/FileField'

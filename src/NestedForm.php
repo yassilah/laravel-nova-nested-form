@@ -93,6 +93,13 @@ class NestedForm extends Field
     public $pluralLabel;
 
     /**
+     * Default separator.
+     * 
+     * @var string
+     */
+    public $separator = '.';
+
+    /**
      * From resource uriKey.
      * 
      * @var string
@@ -223,9 +230,21 @@ class NestedForm extends Field
      * 
      * @param boolean $opened
      */
-    public function opened(boolean $opened)
+    public function open(boolean $opened)
     {
         $this->opened = $opened;
+
+        return $this->returnContext;
+    }
+
+    /**
+     * Set the default separator.
+     * 
+     * @param string $separator
+     */
+    public function separator(string $separator)
+    {
+        $this->separator = $separator;
 
         return $this->returnContext;
     }
