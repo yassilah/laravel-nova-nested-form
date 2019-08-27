@@ -348,6 +348,10 @@ class NestedForm extends Field
             return $this->isRelatedField($field);
         });
 
+        if (!$field) {
+            throw new \Exception(__('A BelongsTo or MorphTo field needs to be set on your related resource.'));
+        }
+
         if ($field instanceof MorphTo) {
             return [$field->attribute => self::ID, $field->attribute . '_type' => $this->viaResource];
         }
