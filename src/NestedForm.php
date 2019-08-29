@@ -565,7 +565,7 @@ class NestedForm extends Field
                 'min' => $this->min,
                 'max' => $this->isManyRelationsip() ? $this->max : 1,
                 'displayIf' => isset($this->displayIfCallback) ? call_user_func($this->displayIfCallback) : null
-            ],
+            ]
         );
     }
 }
