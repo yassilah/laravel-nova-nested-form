@@ -465,7 +465,7 @@ class NestedForm extends Field
      */
     protected function getCreateRequest(NovaRequest $request, $model, $child, $index, $requestAttribute, $relatedKeys)
     {
-        $request = CreateResourceRequest::createFrom($request->replace([
+        $createRequest = CreateResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
             'viaResourceId' => $model->id,
             'viaRelationship' => $this->viaRelationship
@@ -473,9 +473,9 @@ class NestedForm extends Field
             return $value === self::ID ? $model->id : $value;
         })->toArray()));
 
-        $request->files = collect($request->file($requestAttribute . '.' . $index));
+        $createRequest->files = collect($request->file($requestAttribute . '.' . $index));
 
-        return $request;
+        return $createRequest;
     }
 
     /**
