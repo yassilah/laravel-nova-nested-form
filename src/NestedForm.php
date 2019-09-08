@@ -305,7 +305,7 @@ class NestedForm extends Field
      */
     protected function isManyRelationsip()
     {
-        return str_contains($this->getRelationshipType(), 'Many');
+        return Str::contains($this->getRelationshipType(), 'Many');
     }
 
     /**
