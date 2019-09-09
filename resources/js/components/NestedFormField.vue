@@ -153,7 +153,7 @@ export default {
           if (typeof is !== 'undefined') {
             shouldDisplay.push(values.every(v => v === is))
           } else if (typeof isNot !== 'undefined') {
-            shouldDisplay.push(values.every(v => v !== is))
+            shouldDisplay.push(values.every(v => v !== isNot))
           } else if (isNotNull) {
             shouldDisplay.push(values.every(v => Boolean(v)))
           } else if (isNull) {
