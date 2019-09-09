@@ -63,6 +63,20 @@ class NestedForm extends Field
     public $component = 'nested-form';
 
     /**
+     * Indicates if the element should be shown on the index view.
+     *
+     * @var \Closure|bool
+     */
+    public $showOnIndex = false;
+
+    /**
+     * Indicates if the element should be shown on the detail view.
+     *
+     * @var \Closure|bool
+     */
+    public $showOnDetail = false;
+
+    /**
      * The field's relationship resource class.
      * 
      * @var string
