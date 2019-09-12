@@ -30,7 +30,9 @@ export default {
      * Add a new child.
      */
     addChild() {
-      this.field.children.push(this.replaceIndexesInSchema(this.field))
+      const maxKey = this.field.children[this.field.children.length - 1].key || Math.max.apply(Math, this.field.children.map(({ id }) => id));
+      this.field.schema.key = maxKey + 1;
+      this.field.children.push(this.replaceIndexesInSchema(this.field));
     },
 
     /**

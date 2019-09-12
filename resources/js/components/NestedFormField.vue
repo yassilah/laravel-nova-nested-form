@@ -4,7 +4,7 @@
       <template v-if="field.children.length > 0">
         <card
           :class="{ 'overflow-hidden': field.panel && !index }"
-          :key="childIndex"
+          :key="child.id || child.key"
           v-for="(child, childIndex) in field.children"
         >
           <nested-form-header
