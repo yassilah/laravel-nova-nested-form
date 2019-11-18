@@ -10,6 +10,10 @@ This package allows you to include your nested relationships' forms into a paren
 composer require yassi/nova-nested-form
 ```
 
+# Contributions
+
+As I did not anticipate so many people would use that package (which is awesome) and simply do not have enough time to update/enhance this package more regularly on my own, I am looking for other contributors to help me with the maintenance and feature requests. Don't hesitate to contact me if you're interested!  
+
 # Update to 3.0
 
 The **afterFill** and **beforeFill** methods are no longer available.
