@@ -140,7 +140,7 @@ class NestedFormSchema implements JsonSerializable
 
         $method->setAccessible(true);
 
-        return $method->invoke($this->resourceInstance(), $this->request, collect($this->resourceInstance()->fields($this->request))
+        return $method->invoke($this->resourceInstance(), $this->request, $this->resourceInstance()->availableFields($this->request)
             ->reject(function ($field) {
                 return $this->parentForm->isRelatedField($field);
             })->map(function ($field) {
