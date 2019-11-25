@@ -2,6 +2,7 @@
 
 namespace Yassi\NestedForm;
 
+use function GuzzleHttp\json_encode;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,9 +21,8 @@ use Laravel\Nova\Http\Requests\DetachResourceRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Laravel\Nova\Nova;
-use Laravel\Nova\Panel;
 
-use function GuzzleHttp\json_encode;
+use Laravel\Nova\Panel;
 
 class NestedForm extends Field
 {
