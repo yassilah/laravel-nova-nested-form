@@ -30,7 +30,7 @@ class NestedFormPanel extends Panel
      */
     public function __get($key)
     {
-        return key_exists($key, $this) ? parent::__get($key) : $this->nestedForm->$key;
+        return property_exists($this, $key) ? parent::__get($key) : $this->nestedForm->$key;
     }
 
     /**
@@ -38,7 +38,7 @@ class NestedFormPanel extends Panel
      */
     public function __set($key, $value)
     {
-        key_exists($key, $this) ? parent::__set($key, $value) : $this->nestedForm->$key = $value;
+        property_exists($this, $key) ? parent::__set($key, $value) : $this->nestedForm->$key = $value;
     }
 
     /**
