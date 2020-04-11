@@ -21,7 +21,9 @@ export default {
   props: {
     field: {
       type: Object,
-      required: true
+      required: true,
+      schema: {},
+      children: []
     }
   },
 
@@ -31,8 +33,14 @@ export default {
      */
     addChild() {
       let maxKey = 0;
-      if(this.field.children.length){
+      if(this.field.children && this.field.children.length){
         maxKey = this.field.children[this.field.children.length - 1].key || Math.max.apply(Math, this.field.children.map(({ id }) => id));
+      }
+      if (!this.field.schema) {
+        this.field.schema = {};
+      }
+      if (!this.field.children) {
+        this.field.children = [];
       }
       this.field.schema.key = maxKey + 1;
       this.field.children.push(this.replaceIndexesInSchema(this.field));
@@ -46,7 +54,7 @@ export default {
     replaceIndexesInSchema(field) {
       const schema = JSON.parse(JSON.stringify(field.schema))
 
-      schema.fields.forEach(field => {
+      schema.fields && schema.fields.forEach(field => {
         if (field.schema) {
           field.schema = this.replaceIndexesInSchema(field)
         }
@@ -66,10 +74,10 @@ export default {
         }
       })
 
-      schema.heading = schema.heading.replace(
+      schema.heading = schema.heading && schema.heading.replace(
         this.field.indexKey,
         this.field.children.length + 1
-      )
+      ) || ''
 
       return schema
     }
@@ -79,7 +87,7 @@ export default {
    * On created.
    */
   created() {
-    for (let i = this.field.children.length; i < this.field.min; i++) {
+    for (let i = this.field.children && this.field.children.length || 0; i < this.field.min; i++) {
       this.addChild()
     }
   }

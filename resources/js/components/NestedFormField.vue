@@ -1,7 +1,7 @@
 <template>
   <div class="relative">
     <template v-if="shouldDisplay()">
-      <template v-if="field.children.length > 0">
+      <template v-if="field.children && field.children.length > 0">
         <card
           :class="{ 'overflow-hidden': field.panel && !index }"
           :key="child.id || child.key"
