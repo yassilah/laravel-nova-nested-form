@@ -3,9 +3,10 @@
     <template v-if="shouldDisplay()">
       <template v-if="field.children && field.children.length > 0">
         <card
-          :class="{ 'overflow-hidden': field.panel && !index }"
+          :class="{ 'overflow-hidden': field.panel && !index, 'blah': true }"
           :key="child.id || child.key"
           v-for="(child, childIndex) in field.children"
+          v-bind:style="getStyle(childIndex)"
         >
           <nested-form-header
             :child="child"
@@ -91,6 +92,11 @@ export default {
     }
   },
   methods: {
+    getStyle(index) {
+        return index
+          ? { borderRadius: 0 }
+          : {}
+    },
 
     /**
      * Fill the given FormData object with the field's internal value.
