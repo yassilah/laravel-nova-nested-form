@@ -91,6 +91,7 @@ export default {
     }
   },
   methods: {
+
     /**
      * Fill the given FormData object with the field's internal value.
      */
@@ -102,7 +103,9 @@ export default {
             child[this.field.keyName]
           )
         }
-        child.fields.forEach(field => field.fill(formData))
+        child.fields.forEach(field => {
+          field.fill(formData)
+        })
       })
 
       const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/
@@ -232,6 +235,13 @@ export default {
     if (this.field.displayIf) {
       this.setConditions()
     }
+
+    // Mutate the validation key to fix error not showing bug
+    this.field.children.forEach(child => {
+      child.fields.forEach(field => {
+        field.validationKey =  field.attribute;
+      })
+    })
   }
 }
 </script>
