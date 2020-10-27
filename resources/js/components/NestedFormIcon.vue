@@ -12,8 +12,8 @@
 export default {
   props: {
     hoverColor: {
-      type: String
-    }
-  }
-}
+      type: String,
+    },
+  },
+};
 </script>
