@@ -35,7 +35,9 @@ export default {
      * Get the heading.
      */
     heading() {
-        if (typeof this.field.max !== 'undefined' && this.field.min !== 'undefined') {
+        // Field max is set to 0 when it is unlimited!
+        // we only want field that has max and min on it, and check if the limit is 1 or less!
+        if (typeof this.field.max !== 'undefined' && this.field.min !== 'undefined' && this.field.max !== 0) {
             if ((this.field.max - this.field.min) <= 1) {
                 return this.child.heading.replace(/\d+\. /, '');
             }
