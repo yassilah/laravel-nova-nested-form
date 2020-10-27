@@ -35,6 +35,12 @@ export default {
      * Get the heading.
      */
     heading() {
+        if (typeof this.field.max !== 'undefined' && this.field.min !== 'undefined') {
+            if ((this.field.max - this.field.min) <= 1) {
+                return this.child.heading.replace(/\d+\. /, '');
+            }
+        } 
+
       return this.child.heading
         ? this.child.heading.replace(
             new RegExp(
