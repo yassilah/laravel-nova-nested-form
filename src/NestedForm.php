@@ -222,7 +222,10 @@ class NestedForm extends Field
      */
     public function schema($resource)
     {
-        return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        if (method_exists($resource, $this->viaRelationship)) {
+            return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        }
+        return false;
     }
 
     /**
@@ -230,11 +233,14 @@ class NestedForm extends Field
      */
     public function children($resource)
     {
-        return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
-            return NestedFormChild::make($model, $index, $this);
-        })->all();
-    }
+        if (method_exists($resource, $this->viaRelationship)) {
+            return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
+                return NestedFormChild::make($model, $index, $this);
+            })->all();
+        }
 
+        return false;
+    }
 
     /**
      * Set the heading.
