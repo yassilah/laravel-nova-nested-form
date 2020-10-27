@@ -1,4 +1,4 @@
-<template>
+<template v-bind:class ="(shouldDisplay())?'with-content':'without-content'">
   <div class="relative">
     <template v-if="shouldDisplay()">
       <template v-if="field.children && field.children.length > 0">
