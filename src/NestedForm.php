@@ -470,6 +470,9 @@ class NestedForm extends Field
     protected function getDeleteRequest(NovaRequest $request, $model, $children)
     {
         return DeleteResourceRequest::createFrom($request->replace([
+            'viaResource' => null,
+            'viaResourceId' => null,
+            'viaRelationship' => null,
             'resources' => $model->{$this->viaRelationship}()->whereNotIn($this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
         ]));
     }
