@@ -20,7 +20,7 @@
     "laravel-vapor": "^0.4.1",
     "minimist": "^1.2.2",
     "resolve-url-loader": "^3.1.2",
-    "serialize-javascript": "^2.1.1",
+    "serialize-javascript": "^3.1.0",
     "vue-template-compiler": "^2.6.12"
   },
   "dependencies": {
