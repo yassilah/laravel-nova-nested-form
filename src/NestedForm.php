@@ -344,6 +344,9 @@ class NestedForm extends Field
     {
         if ($model->exists) {
             $newRequest = NovaRequest::createFrom($request);
+            if (!$model->{$model->getKeyName() && $request->has($model->getKeyName())}) {
+                $model->{$model->getKeyName()} = $request->get($model->getKeyName());
+            }
             $children = collect($newRequest->get($requestAttribute));
             $newRequest->route()->setParameter('resource', $this->resourceName);
             $this->deleteChildren($newRequest, $model, $children);
@@ -480,6 +483,9 @@ class NestedForm extends Field
     protected function getDeleteRequest(NovaRequest $request, $model, $children)
     {
         return DeleteResourceRequest::createFrom($request->replace([
+            'viaResource' => null,
+            'viaResourceId' => null,
+            'viaRelationship' => null,
             'resources' => $model->{$this->viaRelationship}()->whereNotIn($this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
         ]));
     }
