@@ -183,6 +183,7 @@ class NestedForm extends Field
      */
     public function __construct(string $name, $attribute = null, $resource = null)
     {
+
         parent::__construct($name, $attribute);
         $resource = $resource ?? ResourceRelationshipGuesser::guessResource($name);
 
@@ -194,6 +195,9 @@ class NestedForm extends Field
         $this->keyName = (new $this->resourceClass::$model)->getKeyName();
         $this->viaResource = app(NovaRequest::class)->route('resource');
         $this->returnContext = $this;
+
+        // Nova ^3.3.x need this to fix cannot add relation on create mode
+        $this->resolve(app(NovaRequest::class)->model());
     }
 
     /**
@@ -218,7 +222,10 @@ class NestedForm extends Field
      */
     public function schema($resource)
     {
-        return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        if (method_exists($resource, $this->viaRelationship)) {
+            return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        }
+        return false;
     }
 
     /**
@@ -226,11 +233,14 @@ class NestedForm extends Field
      */
     public function children($resource)
     {
-        return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
-            return NestedFormChild::make($model, $index, $this);
-        })->all();
-    }
+        if (method_exists($resource, $this->viaRelationship)) {
+            return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
+                return NestedFormChild::make($model, $index, $this);
+            })->all();
+        }
 
+        return false;
+    }
 
     /**
      * Set the heading.
