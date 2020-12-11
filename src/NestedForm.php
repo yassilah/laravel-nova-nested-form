@@ -344,7 +344,7 @@ class NestedForm extends Field
     {
         if ($model->exists) {
             $newRequest = NovaRequest::createFrom($request);
-            if (!$model->{$model->getKeyName() && $request->has($model->getKeyName())}) {
+            if (!$model->{$model->getKeyName()} && $request->has($model->getKeyName())) {
                 $model->{$model->getKeyName()} = $request->get($model->getKeyName());
             }
             $children = collect($newRequest->get($requestAttribute));
