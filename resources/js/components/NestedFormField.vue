@@ -1,7 +1,15 @@
 <template>
   <div class="relative">
+    <help-text    
+      class="error-text mt-2 text-danger p-4"
+      v-if="hasError"
+    >
+      {{ firstError }}
+    </help-text>
+        
     <template v-if="shouldDisplay()">
       <template v-if="field.children.length > 0">
+
         <card
           :class="{ 'overflow-hidden': field.panel && !index }"
           :key="child.id || child.key"
@@ -11,6 +19,7 @@
             :child="child"
             :field="field"
           />
+
           <component
             :conditions="conditions"
             :errors="errors"

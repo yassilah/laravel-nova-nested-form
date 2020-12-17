@@ -289,6 +289,16 @@ class NestedForm extends Field
     }
 
     /**
+     * Set custom validation rules.
+     */
+    public function rules($rules)
+    {
+        parent::rules($rules);
+
+        return $this->returnContext;
+    }
+
+    /**
      * Set the condition to display the form.
      */
     public function displayIf(\Closure $displayIfCallback)
