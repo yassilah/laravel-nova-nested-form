@@ -497,10 +497,10 @@ class NestedForm extends Field
     {
         $createRequest = CreateResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
-            'viaResourceId' => $model->id,
+            'viaResourceId' => $model->getKey(),
             'viaRelationship' => $this->viaRelationship
         ])->merge($child)->merge(collect($relatedKeys)->map(function ($value) use ($model) {
-            return $value === self::ID ? $model->id : $value;
+            return $value === self::ID ? $model->getKey() : $value;
         })->toArray()));
 
         $createRequest->files = collect($request->file($requestAttribute . '.' . $index));
