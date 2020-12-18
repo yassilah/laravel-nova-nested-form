@@ -471,7 +471,7 @@ class NestedForm extends Field
     {
         return DetachResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
-            'viaResourceId' => $model->id,
+            'viaResourceId' => $model->getKey(),
             'viaRelationship' => $this->viaRelationship,
             'resources' => $model->{$this->viaRelationship}()->select($this->attribute . '.' . $this->keyName)->whereNotIn($this->attribute . '.' . $this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
         ]));
