@@ -7,6 +7,13 @@
         : 'nova-nested-form-without-content'
     "
   >
+    <help-text    
+      class="error-text mt-2 text-danger p-4"
+      v-if="hasError"
+    >
+      {{ firstError }}
+    </help-text>
+
     <template v-if="shouldDisplay()">
       <template v-if="field.children && field.children.length > 0">
         <card
@@ -15,7 +22,11 @@
           v-for="(child, childIndex) in field.children"
           v-bind:style="getStyle(childIndex)"
         >
-          <nested-form-header :child="child" :field="field" />
+          <nested-form-header
+            :child="child"
+            :field="field"
+          />
+
           <component
             :conditions="conditions"
             :errors="errors"
