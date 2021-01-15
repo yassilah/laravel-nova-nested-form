@@ -4,6 +4,7 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
+    "commit": "git-cz",
     "dev": "npm run development",
     "development": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
     "watch": "cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js",
@@ -13,16 +14,18 @@
     "production": "cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js"
   },
   "devDependencies": {
-    "acorn": "^6.4.1",
-    "cross-env": "^5.0.0",
-    "laravel-mix": "^4.1.2",
-    "laravel-nova": "^1.0",
+    "acorn": "^8.0.4",
+    "cross-env": "^7.0.3",
+    "git-cz": "^4.7.6",
+    "laravel-mix": "^5.0.9",
+    "laravel-nova": "^1.6.0",
+    "laravel-vapor": "^0.4.1",
     "minimist": "^1.2.2",
-    "resolve-url-loader": "3.1.0",
-    "serialize-javascript": "^2.1.1",
-    "vue-template-compiler": "^2.6.10"
+    "resolve-url-loader": "^3.1.2",
+    "serialize-javascript": "^5.0.1",
+    "vue-template-compiler": "^2.6.12"
   },
   "dependencies": {
-    "vue": "^2.5.0"
+    "vue": "^2.6.12"
   }
 }

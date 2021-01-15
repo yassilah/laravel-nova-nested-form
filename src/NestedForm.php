@@ -183,6 +183,7 @@ class NestedForm extends Field
      */
     public function __construct(string $name, $attribute = null, $resource = null)
     {
+
         parent::__construct($name, $attribute);
         $resource = $resource ?? ResourceRelationshipGuesser::guessResource($name);
 
@@ -194,6 +195,9 @@ class NestedForm extends Field
         $this->keyName = (new $this->resourceClass::$model)->getKeyName();
         $this->viaResource = app(NovaRequest::class)->route('resource');
         $this->returnContext = $this;
+
+        // Nova ^3.3.x need this to fix cannot add relation on create mode
+        $this->resolve(app(NovaRequest::class)->model());
     }
 
     /**
@@ -218,7 +222,10 @@ class NestedForm extends Field
      */
     public function schema($resource)
     {
-        return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        if (method_exists($resource, $this->viaRelationship)) {
+            return NestedFormSchema::make($resource->{$this->viaRelationship}()->getModel(), static::wrapIndex(), $this);
+        }
+        return false;
     }
 
     /**
@@ -226,11 +233,14 @@ class NestedForm extends Field
      */
     public function children($resource)
     {
-        return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
-            return NestedFormChild::make($model, $index, $this);
-        })->all();
-    }
+        if (method_exists($resource, $this->viaRelationship)) {
+            return $resource->{$this->viaRelationship}()->get()->map(function ($model, $index) {
+                return NestedFormChild::make($model, $index, $this);
+            })->all();
+        }
 
+        return false;
+    }
 
     /**
      * Set the heading.
@@ -344,6 +354,9 @@ class NestedForm extends Field
     {
         if ($model->exists) {
             $newRequest = NovaRequest::createFrom($request);
+            if (!$model->{$model->getKeyName()} && $request->has($model->getKeyName())) {
+                $model->{$model->getKeyName()} = $request->get($model->getKeyName());
+            }
             $children = collect($newRequest->get($requestAttribute));
             $newRequest->route()->setParameter('resource', $this->resourceName);
             $this->deleteChildren($newRequest, $model, $children);
@@ -468,7 +481,7 @@ class NestedForm extends Field
     {
         return DetachResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
-            'viaResourceId' => $model->id,
+            'viaResourceId' => $model->getKey(),
             'viaRelationship' => $this->viaRelationship,
             'resources' => $model->{$this->viaRelationship}()->select($this->attribute . '.' . $this->keyName)->whereNotIn($this->attribute . '.' . $this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
         ]));
@@ -480,6 +493,9 @@ class NestedForm extends Field
     protected function getDeleteRequest(NovaRequest $request, $model, $children)
     {
         return DeleteResourceRequest::createFrom($request->replace([
+            'viaResource' => null,
+            'viaResourceId' => null,
+            'viaRelationship' => null,
             'resources' => $model->{$this->viaRelationship}()->whereNotIn($this->keyName, $children->pluck($this->keyName))->pluck($this->keyName)
         ]));
     }
@@ -491,10 +507,10 @@ class NestedForm extends Field
     {
         $createRequest = CreateResourceRequest::createFrom($request->replace([
             'viaResource' => $this->viaResource,
-            'viaResourceId' => $model->id,
+            'viaResourceId' => $model->getKey(),
             'viaRelationship' => $this->viaRelationship
         ])->merge($child)->merge(collect($relatedKeys)->map(function ($value) use ($model) {
-            return $value === self::ID ? $model->id : $value;
+            return $value === self::ID ? $model->getKey() : $value;
         })->toArray()));
 
         $createRequest->files = collect($request->file($requestAttribute . '.' . $index));

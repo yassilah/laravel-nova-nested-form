@@ -1,19 +1,26 @@
 <template>
-  <div class="relative">
+  <div
+    class="relative"
+    v-bind:class="
+      shouldDisplay()
+        ? 'nova-nested-form-with-content'
+        : 'nova-nested-form-without-content'
+    "
+  >
     <help-text    
       class="error-text mt-2 text-danger p-4"
       v-if="hasError"
     >
       {{ firstError }}
     </help-text>
-        
-    <template v-if="shouldDisplay()">
-      <template v-if="field.children.length > 0">
 
+    <template v-if="shouldDisplay()">
+      <template v-if="field.children && field.children.length > 0">
         <card
-          :class="{ 'overflow-hidden': field.panel && !index }"
+          :class="{ 'overflow-hidden': field.panel && !index, blah: true }"
           :key="child.id || child.key"
           v-for="(child, childIndex) in field.children"
+          v-bind:style="getStyle(childIndex)"
         >
           <nested-form-header
             :child="child"
@@ -39,87 +46,96 @@
         </card>
       </template>
 
-      <div
-        class="flex flex-col p-8 items-center justify-center"
-        v-else
-      >
-        <p
-          class="text-center my-4 font-bold text-80 text-xl"
-        >{{__('No related :pluralLabel yet.', { pluralLabel: field.pluralLabel })}}</p>
+      <div class="flex flex-col p-8 items-center justify-center" v-else>
+        <p class="text-center my-4 font-bold text-80 text-xl">
+          {{
+            __("No related :pluralLabel yet.", {
+              pluralLabel: field.pluralLabel,
+            })
+          }}
+        </p>
         <nested-form-add :field="field" />
       </div>
     </template>
 
-    <div
-      class="flex flex-col p-8 items-center justify-center"
-      v-else
-    >
-      <p
-        class="text-center my-4 font-bold text-80 text-xl"
-      >{{__('You cannot add :pluralLabel.', { pluralLabel: field.pluralLabel })}}</p>
+    <div class="flex flex-col p-8 items-center justify-center" v-else>
+      <p class="text-center my-4 font-bold text-80 text-xl">
+        {{
+          __("You cannot add :pluralLabel.", { pluralLabel: field.pluralLabel })
+        }}
+      </p>
     </div>
   </div>
 </template>
 
 <script >
-import { FormField, HandlesValidationErrors } from 'laravel-nova'
-import NestedFormAdd from './NestedFormAdd'
-import NestedFormHeader from './NestedFormHeader'
+import { FormField, HandlesValidationErrors } from "laravel-nova";
+import NestedFormAdd from "./NestedFormAdd";
+import NestedFormHeader from "./NestedFormHeader";
 
 export default {
   mixins: [FormField, HandlesValidationErrors],
 
   components: {
     NestedFormAdd,
-    NestedFormHeader
+    NestedFormHeader,
   },
 
   props: {
     resourceName: {
       type: String,
-      required: true
+      required: true,
     },
     resourceId: {
       type: String | Number,
-      required: true
+      required: true,
     },
     field: {
       type: Object,
-      required: true
+      required: true,
     },
     conditions: {
       type: Object,
-      default: () => ({})
+      default: () => ({}),
     },
     index: {
       type: Number,
-      required: true
+      required: true,
     },
     parentIndex: {
-      type: Number
-    }
+      type: Number,
+    },
   },
   methods: {
+    getStyle(index) {
+      return index ? { borderRadius: 0 } : {};
+    },
+
     /**
      * Fill the given FormData object with the field's internal value.
      */
     fill(formData) {
-      this.field.children.forEach(child => {
+      if (!this.shouldDisplay()) {
+        return;
+      }
+      this.field.children.forEach((child) => {
         if (child[this.field.keyName]) {
           formData.append(
             `${child.attribute}[${this.field.keyName}]`,
             child[this.field.keyName]
-          )
+          );
         }
-        child.fields.forEach(field => field.fill(formData))
-      })
+        child.fields.forEach((field) => {
+          field.fill(formData);
+        });
+      });
 
-      const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/
+      const regex = /(.*?(?:\[.*?\])+)(\[.*?)\]((?!\[).+)$/;
 
       for (const [key, value] of formData.entries()) {
         if (key.match(regex)) {
-          formData.append(key.replace(regex, '$1$2$3]'), value)
-          formData.delete(key)
+          formData.append(key.replace(regex, "$1$2$3]"), value);
+          formData.delete(key);
         }
       }
     },
@@ -128,7 +144,7 @@ export default {
      * Update the field's internal value.
      */
     handleChange(value) {
-      this.value = value
+      this.value = value;
     },
 
     /**
@@ -136,10 +152,10 @@ export default {
      */
     shouldDisplay() {
       if (!this.field.displayIf) {
-        return true
+        return true;
       }
 
-      let shouldDisplay = []
+      let shouldDisplay = [];
 
       for (let i in this.field.displayIf) {
         const {
@@ -151,37 +167,37 @@ export default {
           isLessThan,
           isMoreThanOrEqual,
           isLessThanOrEqual,
-          includes
-        } = this.field.displayIf[i]
+          includes,
+        } = this.field.displayIf[i];
 
         if (attribute) {
           const values = Object.keys(this.conditions)
-            .filter(key => key.match(`^${attribute}$`))
-            .map(key => this.conditions[key])
+            .filter((key) => key.match(`^${attribute}$`))
+            .map((key) => this.conditions[key]);
 
-          if (typeof is !== 'undefined') {
-            shouldDisplay.push(values.every(v => v === is))
-          } else if (typeof isNot !== 'undefined') {
-            shouldDisplay.push(values.every(v => v !== isNot))
+          if (typeof is !== "undefined") {
+            shouldDisplay.push(values.every((v) => v === is));
+          } else if (typeof isNot !== "undefined") {
+            shouldDisplay.push(values.every((v) => v !== isNot));
           } else if (isNotNull) {
-            shouldDisplay.push(values.every(v => Boolean(v)))
+            shouldDisplay.push(values.every((v) => Boolean(v)));
           } else if (isNull) {
-            shouldDisplay.push(values.every(v => !Boolean(v)))
-          } else if (typeof isMoreThan !== 'undefined') {
-            shouldDisplay.push(values.every(v => v > isMoreThan))
-          } else if (typeof isLessThan !== 'undefined') {
-            shouldDisplay.push(values.every(v => v < isLessThan))
-          } else if (typeof isMoreThanOrEqual !== 'undefined') {
-            shouldDisplay.push(values.every(v => v >= isMoreThanOrEqual))
-          } else if (typeof isLessThanOrEqual !== 'undefined') {
-            shouldDisplay.push(values.every(v => v <= isLessThanOrEqual))
+            shouldDisplay.push(values.every((v) => !Boolean(v)));
+          } else if (typeof isMoreThan !== "undefined") {
+            shouldDisplay.push(values.every((v) => v > isMoreThan));
+          } else if (typeof isLessThan !== "undefined") {
+            shouldDisplay.push(values.every((v) => v < isLessThan));
+          } else if (typeof isMoreThanOrEqual !== "undefined") {
+            shouldDisplay.push(values.every((v) => v >= isMoreThanOrEqual));
+          } else if (typeof isLessThanOrEqual !== "undefined") {
+            shouldDisplay.push(values.every((v) => v <= isLessThanOrEqual));
           } else if (includes) {
-            shouldDisplay.push(values.every(v => v && includes.includes(v)))
+            shouldDisplay.push(values.every((v) => v && includes.includes(v)));
           }
         }
       }
 
-      return shouldDisplay.every(should => should)
+      return shouldDisplay.every((should) => should);
     },
     /**
      * Get all the fields of the instance.
@@ -189,31 +205,31 @@ export default {
     setAllAttributeWatchers(instance) {
       if (
         instance.fieldAttribute &&
-        typeof this.conditions[instance.fieldAttribute] === 'undefined'
+        typeof this.conditions[instance.fieldAttribute] === "undefined"
       ) {
         this.field.displayIf
-          .filter(field =>
+          .filter((field) =>
             instance.fieldAttribute.match(`^${field.attribute}$`)
           )
-          .forEach(field => {
+          .forEach((field) => {
             const keyToWatch = instance.selectedResourceId
-              ? 'selectedResourceId'
-              : 'value'
+              ? "selectedResourceId"
+              : "value";
 
             this.$set(
               this.conditions,
               instance.fieldAttribute,
               instance[keyToWatch]
-            )
+            );
 
-            instance.$watch(keyToWatch, keyToWatch => {
-              this.$set(this.conditions, instance.fieldAttribute, keyToWatch)
-            })
-          })
+            instance.$watch(keyToWatch, (keyToWatch) => {
+              this.$set(this.conditions, instance.fieldAttribute, keyToWatch);
+            });
+          });
       }
 
       if (instance.$children) {
-        instance.$children.map(child => this.setAllAttributeWatchers(child))
+        instance.$children.map((child) => this.setAllAttributeWatchers(child));
       }
     },
 
@@ -221,26 +237,35 @@ export default {
      * Get component name.
      */
     getComponentName(child) {
-      return child.prefixComponent ? `form-${child.component}` : child.component
+      return child.prefixComponent
+        ? `form-${child.component}`
+        : child.component;
     },
 
     setConditions() {
       if (this.field.displayIf) {
-        this.setAllAttributeWatchers(this.$root)
+        this.setAllAttributeWatchers(this.$root);
       }
-    }
+    },
   },
 
   watch: {
-    'field.children'() {
-      this.setConditions()
-    }
+    "field.children"() {
+      this.setConditions();
+    },
   },
 
   mounted() {
     if (this.field.displayIf) {
-      this.setConditions()
+      this.setConditions();
     }
-  }
-}
+
+    // Mutate the validation key to fix error not showing bug
+    this.field.children.forEach((child) => {
+      child.fields.forEach((field) => {
+        field.validationKey = field.attribute;
+      });
+    });
+  },
+};
 </script>
