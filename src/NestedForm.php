@@ -3,9 +3,9 @@
 namespace Yassi\NestedForm;
 
 use function GuzzleHttp\json_encode;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Nova\Contracts\RelatableField;
 use Laravel\Nova\Fields\BelongsTo;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Field;
@@ -24,33 +24,33 @@ use Laravel\Nova\Nova;
 
 use Laravel\Nova\Panel;
 
-class NestedForm extends Field
+class NestedForm extends Field implements RelatableField
 {
 
     /**
      * Wrap left.
-     * 
+     *
      * @var string
      */
     const WRAP_LEFT = '{{';
 
     /**
      * Wrap right.
-     * 
+     *
      * @var string
      */
     const WRAP_RIGHT = '}}';
 
     /**
      * INDEX.
-     * 
+     *
      * @var string
      */
     const INDEX = 'INDEX';
 
     /**
      * ID.
-     * 
+     *
      * @var string
      */
     const ID = 'ID';
@@ -78,56 +78,56 @@ class NestedForm extends Field
 
     /**
      * The field's relationship resource class.
-     * 
+     *
      * @var string
      */
     public $resourceClass;
 
     /**
      * The field's relationship resource name.
-     * 
+     *
      * @var string
      */
     public $resourceName;
 
     /**
      * The field's relationship name.
-     * 
+     *
      * @var string
      */
     public $viaRelationship;
 
     /**
      * The field's singular label.
-     * 
+     *
      * @var string
      */
     public $singularLabel;
 
     /**
      * The field's plural label.
-     * 
+     *
      * @var string
      */
     public $pluralLabel;
 
     /**
      * Default separator.
-     * 
+     *
      * @var string
      */
     public $separator = '.';
 
     /**
      * From resource uriKey.
-     * 
+     *
      * @var string
      */
     public $viaResource;
 
     /**
      * Key name.
-     * 
+     *
      * @var string
      */
     public $keyName;
@@ -135,28 +135,28 @@ class NestedForm extends Field
 
     /**
      * Whether the form should be opened by default.
-     * 
+     *
      * @var boolean
      */
     public $opened = true;
 
     /**
      * The heading template for children.
-     * 
+     *
      * @var string
      */
     public $heading;
 
     /**
      * The maximum number of children.
-     * 
+     *
      * @var int
      */
     public $max = 0;
 
     /**
      * The minimum number of children.
-     * 
+     *
      * @var int
      */
     public $min = 0;
@@ -168,7 +168,7 @@ class NestedForm extends Field
 
     /**
      * Return context
-     * 
+     *
      * @var Panel|Field|NestedForm
      */
     protected $returnContext;
@@ -244,7 +244,7 @@ class NestedForm extends Field
 
     /**
      * Set the heading.
-     * 
+     *
      * @param string $heading
      */
     public function heading(string $heading)
@@ -256,7 +256,7 @@ class NestedForm extends Field
 
     /**
      * Set whether the form should be opened by default.
-     * 
+     *
      * @param boolean $opened
      */
     public function open(bool $opened)
@@ -268,7 +268,7 @@ class NestedForm extends Field
 
     /**
      * Set the default separator.
-     * 
+     *
      * @param string $separator
      */
     public function separator(string $separator)
@@ -555,7 +555,7 @@ class NestedForm extends Field
     /**
      * Wrap an attribute into a dynamic attribute
      * value.
-     * 
+     *
      * @param string $attribute
      * @param string $default
      */
@@ -565,9 +565,9 @@ class NestedForm extends Field
     }
 
     /**
-     * Turn a given attribute string into 
+     * Turn a given attribute string into
      * a conditional attribute.
-     * 
+     *
      * @param string $attribute
      */
     public static function conditional(string $attribute)
