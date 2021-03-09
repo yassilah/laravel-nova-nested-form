@@ -105,6 +105,9 @@ class Post extends Resource
                     [ 'attribute' => 'subtitle', 'isNull' => true ],
                     [ 'attribute' => 'title', 'includes' => 'My' ],
                     [ 'attribute' => 'number_of_comments_allowed', 'moreThanOrEqual' => 1 ],
+
+                    // Integration for nova booleanGroup field
+                    [ 'attribute' => 'my_multiple_checkbox', 'booleanGroup' => 'the_checkbox_key_to_target' ],
                 ];
             })
         ];
@@ -122,6 +125,8 @@ The package will then add those conditions and dynamically update your form as y
 - [x] isMoreThanOrEqual
 - [x] isLessThan
 - [x] isLessThanOrEqual
+- [x] includes
+- [x] booleanGroup
 
 # Add a minimum or a maximum number of children
 
