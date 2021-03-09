@@ -162,12 +162,14 @@ export default {
           attribute,
           is,
           isNot,
+          isNull,
           isNotNull,
           isMoreThan,
           isLessThan,
           isMoreThanOrEqual,
           isLessThanOrEqual,
           includes,
+          booleanGroup,
         } = this.field.displayIf[i];
 
         if (attribute) {
@@ -193,6 +195,13 @@ export default {
             shouldDisplay.push(values.every((v) => v <= isLessThanOrEqual));
           } else if (includes) {
             shouldDisplay.push(values.every((v) => v && includes.includes(v)));
+          } else if (typeof booleanGroup !== "undefined") {
+            shouldDisplay.push(values.every((o) => {
+                let oo = JSON.parse(JSON.stringify(o)).filter((x) => {
+                    return x.name === booleanGroup;
+                });
+                return oo && oo[0] && oo[0].checked;
+            }));
           }
         }
       }
