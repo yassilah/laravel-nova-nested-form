@@ -21,7 +21,7 @@ use Laravel\Nova\Http\Requests\DetachResourceRequest;
 use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Http\Requests\UpdateResourceRequest;
 use Laravel\Nova\Nova;
-
+use Illuminate\Contracts\Validation\Rule;
 use Laravel\Nova\Panel;
 
 class NestedForm extends Field implements RelatableField
@@ -303,7 +303,7 @@ class NestedForm extends Field implements RelatableField
      */
     public function rules($rules)
     {
-        parent::rules($rules);
+        parent::rules(($rules instanceof Rule || is_string($rules)) ? func_get_args() : $rules);
 
         return $this->returnContext;
     }
