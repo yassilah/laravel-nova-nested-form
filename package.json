@@ -19,7 +19,7 @@
     "git-cz": "^4.7.6",
     "laravel-mix": "^5.0.9",
     "laravel-nova": "^1.6.0",
-    "laravel-vapor": "^0.4.1",
+    "laravel-vapor": "^0.4.2",
     "minimist": "^1.2.2",
     "resolve-url-loader": "^3.1.2",
     "serialize-javascript": "^5.0.1",
