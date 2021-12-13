@@ -190,8 +190,8 @@ class NestedForm extends Field implements RelatableField
         $this->resourceClass = $resource;
         $this->resourceName = $resource::uriKey();
         $this->viaRelationship = $this->attribute;
-        $this->singularLabel = Str::singular($this->name);
-        $this->pluralLabel = Str::plural($this->name);
+        $this->singularLabel = method_exists($this->resourceClass, 'singularLabel') ? $this->resourceClass::singularLabel() : Str::singular($this->name);
+        $this->pluralLabel = method_exists($this->resourceClass, 'label') ? $this->resourceClass::label() : Str::singular($this->name);
         $this->keyName = (new $this->resourceClass::$model)->getKeyName();
         $this->viaResource = app(NovaRequest::class)->route('resource');
         $this->returnContext = $this;
