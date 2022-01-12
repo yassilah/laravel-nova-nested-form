@@ -174,14 +174,20 @@ class NestedForm extends Field implements RelatableField
     protected $returnContext;
 
     /**
+     * @var string|null
+     */
+    public $panelLabel;
+
+    /**
      * Create a new nested form.
      *
-     * @param  string  $name
-     * @param  string|null  $attribute
-     * @param  string|null  $resource
+     * @param string  $name
+     * @param string|null  $attribute
+     * @param string|null  $resource
+     * @param string|null $panelLabel
      * @return void
      */
-    public function __construct(string $name, $attribute = null, $resource = null)
+    public function __construct(string $name, $attribute = null, $resource = null, $panelLabel = null)
     {
 
         parent::__construct($name, $attribute);
@@ -195,6 +201,7 @@ class NestedForm extends Field implements RelatableField
         $this->keyName = (new $this->resourceClass::$model)->getKeyName();
         $this->viaResource = app(NovaRequest::class)->route('resource');
         $this->returnContext = $this;
+        $this->panelLabel = $panelLabel;
 
         // Nova ^3.3.x need this to fix cannot add relation on create mode
         $this->resolve(app(NovaRequest::class)->model());
