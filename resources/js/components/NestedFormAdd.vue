@@ -65,6 +65,11 @@ export default {
               this.field.indexKey,
               this.field.children.length
             );
+
+            // BugFix: if we don't readd the validation key then the newly added fields
+            // wont display validation messages
+            field.validationKey = field.attribute;
+
           }
           if (field.displayIf) {
             field.displayIf = JSON.parse(
