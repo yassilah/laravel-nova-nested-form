@@ -197,7 +197,8 @@ class NestedForm extends Field implements RelatableField
         $this->returnContext = $this;
 
         // Nova ^3.3.x need this to fix cannot add relation on create mode
-        $this->resolve(app(NovaRequest::class)->model());
+        if(get_class(app(NovaRequest::class)) !== "Laravel\Nova\Http\Requests\GlobalSearchRequest")
+            $this->resolve(app(NovaRequest::class)->model());
     }
 
     /**
