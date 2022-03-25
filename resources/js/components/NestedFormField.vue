@@ -42,6 +42,7 @@
             @file-deleted="$emit('file-deleted')"
             v-for="(childField, childFieldIndex) in child.fields"
             v-show="child.opened"
+            :show-help-text="childField.helpText != null"
           />
         </card>
       </template>
