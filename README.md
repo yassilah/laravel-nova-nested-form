@@ -169,3 +169,11 @@ You can modify the default index separator using the separator() method when you
 ```php
 NestedForm::make('Posts')->separator('\'),
 ```
+
+# Modify default label of panel
+
+You can modify default label of panel (Update Related :resource) to any custom. Pass name of label as the fourth argument of the constructor.
+
+```php
+NestedForm::make('Posts', 'posts', Post::class, 'Custom label of the panel'),
+```
