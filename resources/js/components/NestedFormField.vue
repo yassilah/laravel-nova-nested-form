@@ -184,7 +184,7 @@ export default {
             shouldDisplay.push(values.every((v) => v !== isNot));
           } else if (isNotNull) {
             shouldDisplay.push(values.every((v) => Boolean(v)));
-          } else if (isNull) {
+          } else if (typeof isNull !== "undefined" && isNull) {
             shouldDisplay.push(values.every((v) => !Boolean(v)));
           } else if (typeof isMoreThan !== "undefined") {
             shouldDisplay.push(values.every((v) => v > isMoreThan));
